@@ -42,6 +42,9 @@ wrangler kv:namespace create PHOTOBOOTH_KV
 
 4. Update your `wrangler.jsonc` with the info returned in steps 2 and 3
 ```jsonc
+"ai": { // for ai gateway and llama model to generate haiku and r2 image names, parse filter and image queries
+		"binding": "AI"
+	},
 "kv_namespaces": [
 		{ 
 			"binding": "PHOTOBOOTH_KV",
