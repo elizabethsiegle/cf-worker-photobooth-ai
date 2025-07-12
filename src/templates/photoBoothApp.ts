@@ -433,7 +433,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
   </div>
 
   <div class="footer">
-    made w/ <span class="heart">♥</span> in sf w/ <a href="https://workers.cloudflare.com" target="_blank">cloudflare workers</a>, <a href="https://developers.cloudflare.com/r2/">cloudflare r2</a>, <a href="https://developers.cloudflare.com/kv/">cloudflare kv</a>, <a href="https://developers.cloudflare.com/workers-ai/models/">workers ai</a>, <a href="https://mediapipe.dev" target="_blank">mediapipe</a>
+    made w/ <span class="heart">♥</span> in sf🌉 w/ <a href="https://workers.cloudflare.com" target="_blank"> cloudflare workers</a>, <a href="https://developers.cloudflare.com/r2/"> cloudflare r2</a>, <a href="https://developers.cloudflare.com/kv/"> cloudflare kv</a>, <a href="https://developers.cloudflare.com/workers-ai/models/"> workers ai🤖</a>, <a href="https://mediapipe.dev" target="_blank"> mediapipe</a>
   </div>
 
   <script>

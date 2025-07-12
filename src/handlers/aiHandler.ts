@@ -2,7 +2,6 @@
 // Workers AI integration for creative filename generation and haiku creation
 
 import { createErrorResponse, createSuccessResponse } from '../utils/helpers';
-import { ERROR_MESSAGES } from '../utils/constants';
 
 export interface Env {
   AI: Ai;
