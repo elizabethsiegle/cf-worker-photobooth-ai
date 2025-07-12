@@ -1,5 +1,5 @@
 // File: src/templates/photoBoothApp.ts
-// Main photo booth application template with drawing mode toggle
+// Main photo booth application template with drawing mode toggle and filters
 
 import { getPhotoBoothCSS } from '../assets/styles';
 import { getPhotoBoothJS } from '../assets/photoBooth';
@@ -17,11 +17,180 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
   </script>
   <style>
     ${getPhotoBoothCSS()}
+    
+    /* Enhanced Filter Button Styles */
+    .filter-section {
+      margin: 15px 0;
+      padding: 15px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 12px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .filter-btn {
+      position: relative;
+      padding: 8px 12px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      color: #495057;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .filter-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      transition: left 0.5s ease;
+    }
+    
+    .filter-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border-color: #6c757d;
+    }
+    
+    .filter-btn:hover::before {
+      left: 100%;
+    }
+    
+    .filter-btn.selected {
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      color: white;
+      border-color: #0056b3;
+      box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+      transform: translateY(-1px);
+    }
+    
+    .filter-btn.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 0.7rem;
+      color: #fff;
+      font-weight: bold;
+    }
+    
+    /* Individual filter button colors for visual distinction */
+    .filter-btn[data-filter="sepia"] {
+      background: linear-gradient(135deg, #d4a574 0%, #b8956a 100%);
+      color: #fff;
+    }
+    
+    .filter-btn[data-filter="sepia"]:not(.selected):hover {
+      background: linear-gradient(135deg, #e0b285 0%, #c4a176 100%);
+    }
+    
+    .filter-btn[data-filter="grayscale"] {
+      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+      color: #fff;
+    }
+    
+    .filter-btn[data-filter="grayscale"]:not(.selected):hover {
+      background: linear-gradient(135deg, #78848e 0%, #545b62 100%);
+    }
+    
+    .filter-btn[data-filter="vintage"] {
+      background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
+      color: #fff;
+    }
+    
+    .filter-btn[data-filter="vintage"]:not(.selected):hover {
+      background: linear-gradient(135deg, #9c5424 0%, #703b26 100%);
+    }
+    
+    .filter-btn[data-filter="warm"] {
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+      color: #fff;
+    }
+    
+    .filter-btn[data-filter="warm"]:not(.selected):hover {
+      background: linear-gradient(135deg, #ff7846 0%, #f89d35 100%);
+    }
+    
+    .filter-btn[data-filter="cool"] {
+      background: linear-gradient(135deg, #4dabf7 0%, #228be6 100%);
+      color: #fff;
+    }
+    
+    .filter-btn[data-filter="cool"]:not(.selected):hover {
+      background: linear-gradient(135deg, #74c0fc 0%, #339af0 100%);
+    }
+    
+    .filter-btn[data-filter="dramatic"] {
+      background: linear-gradient(135deg, #495057 0%, #212529 100%);
+      color: #fff;
+    }
+    
+    .filter-btn[data-filter="dramatic"]:not(.selected):hover {
+      background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
+    }
+    
+    .filter-btn[data-filter="dreamy"] {
+      background: linear-gradient(135deg, #e056fd 0%, #9c88ff 100%);
+      color: #fff;
+    }
+    
+    .filter-btn[data-filter="dreamy"]:not(.selected):hover {
+      background: linear-gradient(135deg, #e571fe 0%, #a99eff 100%);
+    }
+    
+    /* CSS filter classes for captured photos */
+    .filter-none {
+      filter: none !important;
+    }
+    
+    .filter-sepia {
+      filter: sepia(1) contrast(1.15) brightness(1.1) saturate(1.2) !important;
+    }
+    
+    .filter-grayscale {
+      filter: grayscale(1) contrast(1.2) brightness(1.05) !important;
+    }
+    
+    .filter-vintage {
+      filter: sepia(0.6) contrast(1.3) brightness(1.15) hue-rotate(-15deg) saturate(1.4) !important;
+    }
+    
+    .filter-warm {
+      filter: hue-rotate(-20deg) saturate(1.4) brightness(1.15) contrast(1.1) !important;
+    }
+    
+    .filter-cool {
+      filter: hue-rotate(20deg) saturate(1.3) brightness(1.08) contrast(1.15) !important;
+    }
+    
+    .filter-dramatic {
+      filter: contrast(1.6) brightness(0.95) saturate(1.4) !important;
+    }
+    
+    .filter-dreamy {
+      filter: blur(0.8px) brightness(1.25) saturate(0.85) contrast(0.9) hue-rotate(5deg) !important;
+    }
   </style>
 </head>
 <body>
   <div class="photo-booth">
-    <h1 class="title">🎭 Cloudflare AI Photo Booth 🎨📸</h1>
+    <h1 class="title">🎭 Cloud Photo Booth 🎨📸</h1>
     
     <div class="status" id="status">Loading camera and face detection...</div>
     
@@ -92,6 +261,21 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
       <div class="action-buttons">
         <button class="btn btn-primary" id="capture-btn">📸 Capture Photo</button>
         <button class="btn btn-mode" id="drawing-mode-btn">🎨 Drawing Mode: OFF</button>
+        
+        <div class="filter-section">
+          <div class="category-title">🎨 Photo Filters</div>
+          <div class="filter-grid">
+            <button class="filter-btn selected" data-filter="none">Original</button>
+            <button class="filter-btn" data-filter="sepia">Sepia</button>
+            <button class="filter-btn" data-filter="grayscale">B&W</button>
+            <button class="filter-btn" data-filter="vintage">Vintage</button>
+            <button class="filter-btn" data-filter="warm">Warm</button>
+            <button class="filter-btn" data-filter="cool">Cool</button>
+            <button class="filter-btn" data-filter="dramatic">Dramatic</button>
+            <button class="filter-btn" data-filter="dreamy">Dreamy</button>
+          </div>
+        </div>
+        
         <button class="btn btn-secondary" id="clear-accessories-btn">🗑️ Clear Accessories</button>
         <button class="btn btn-warning" id="clear-drawing-btn">🎨 Clear Drawing</button>
         <button class="btn btn-warning" id="clear-all-btn">🧹 Clear Everything</button>
@@ -155,7 +339,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
   </div>
 
   <div class="footer">
-    made w/ <span class="heart">♥</span> in sf🌉 w/ <a href="https://workers.cloudflare.com" target="_blank">cloudflare workers</a>, <a href="https://mediapipe.dev" target="_blank">mediapipe, <a href="https://developers.cloudflare.com/r2/">Cloudflare R2</a>. Code on GitHub👩🏻‍💻 <a href="https://github.com/elizabethsiegle/cf-worker-photobooth-ai" target="_blank">here</a>
+    made w/ <span class="heart">♥</span> in sf w/ <a href="https://developers.cloudflare.com/workers/" target="_blank">cloudflare workers</a>, <a href="https://mediapipe.dev" target="_blank">mediapipe</a>, <a href="https://developers.cloudflare.com/r2/">Cloudflare R2</a>. Code on GitHub👩🏻‍💻 <a href="https://github.com/elizabethsiegle/cf-worker-photobooth-ai" target="_blank">here</a>
   </div>
 
   <script>

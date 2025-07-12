@@ -1,5 +1,5 @@
 // File: src/assets/photoBooth.ts
-// Frontend JavaScript for the photo booth application with drawing mode toggle
+// Frontend JavaScript for the photo booth application with drawing mode toggle and filters
 
 export function getPhotoBoothJS(): string {
     return `
@@ -26,7 +26,6 @@ export function getPhotoBoothJS(): string {
           this.lastPhotoId = null;
           this.showFaceBoxes = true;
   
-          // Per-face, per-accessory state
           this.accessoryStates = {};
           this.selectedOverlay = null;
           this.dragOffset = { x: 0, y: 0 };
@@ -36,12 +35,13 @@ export function getPhotoBoothJS(): string {
           this.resizeStart = null;
           this.dragStart = null;
   
-          // Drawing state
           this.isDrawing = false;
-          this.drawingMode = false; // New: controls whether drawing is enabled
+          this.drawingMode = false;
           this.drawingColor = '#000000';
           this.brushSize = 10;
           this.lastDrawPoint = null;
+  
+          this.selectedFilter = 'none';
   
           this.init();
         }
@@ -128,19 +128,17 @@ export function getPhotoBoothJS(): string {
         setupEventListeners() {
           this.log('Setting up event listeners...');
           
-          // Face detection checkbox
           document.getElementById('show-face-boxes').addEventListener('change', (e) => {
             this.showFaceBoxes = e.target.checked;
             this.log('Face boxes toggle: ' + this.showFaceBoxes);
           });
           
-          // Accessory selection
           document.querySelectorAll('.accessory-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
               const type = e.target.dataset.type;
               const item = e.target.dataset.item;
               
-              document.querySelectorAll(\`[data-type="\${type}"]\`).forEach(b => 
+              document.querySelectorAll('[data-type="' + type + '"]').forEach(b => 
                 b.classList.remove('selected')
               );
               
@@ -154,7 +152,6 @@ export function getPhotoBoothJS(): string {
             });
           });
   
-          // Color selection
           document.querySelectorAll('.color-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
               document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
@@ -165,13 +162,18 @@ export function getPhotoBoothJS(): string {
             });
           });
   
-          // Brush size
           document.getElementById('brush-size').addEventListener('input', (e) => {
             this.brushSize = parseInt(e.target.value);
             this.updateBrushPreview();
           });
   
-          // Action buttons
+          document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              const filterType = e.target.dataset.filter;
+              this.selectFilter(filterType);
+            });
+          });
+  
           document.getElementById('capture-btn').addEventListener('click', () => {
             this.log('Capture button clicked');
             this.capturePhoto();
@@ -191,7 +193,6 @@ export function getPhotoBoothJS(): string {
             this.clearDrawing();
           });
           
-          // Check if clear-all-btn exists before adding listener
           const clearAllBtn = document.getElementById('clear-all-btn');
           if (clearAllBtn) {
             clearAllBtn.addEventListener('click', () => {
@@ -220,7 +221,6 @@ export function getPhotoBoothJS(): string {
             this.loadGallery();
           });
   
-          // Mouse/touch events for accessories
           this.overlayCanvas.addEventListener('mousedown', this.onOverlayPointerDown.bind(this));
           this.overlayCanvas.addEventListener('mousemove', this.onOverlayPointerMove.bind(this));
           this.overlayCanvas.addEventListener('mouseup', this.onOverlayPointerUp.bind(this));
@@ -231,7 +231,6 @@ export function getPhotoBoothJS(): string {
           this.overlayCanvas.addEventListener('touchend', this.onOverlayPointerUp.bind(this));
           this.overlayCanvas.addEventListener('mousemove', this.onCursorFeedback.bind(this));
           
-          // Drawing events
           this.drawingCanvas.addEventListener('mousedown', this.onDrawingStart.bind(this));
           this.drawingCanvas.addEventListener('mousemove', this.onDrawingMove.bind(this));
           this.drawingCanvas.addEventListener('mouseup', this.onDrawingEnd.bind(this));
@@ -249,6 +248,39 @@ export function getPhotoBoothJS(): string {
           preview.style.setProperty('--brush-size', this.brushSize + 'px');
         }
   
+        selectFilter(filterType) {
+          this.selectedFilter = filterType;
+          
+          // Update UI - remove selected from all buttons
+          document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('selected');
+          });
+          
+          // Add selected to clicked button
+          const selectedBtn = document.querySelector('[data-filter="' + filterType + '"]');
+          if (selectedBtn) {
+            selectedBtn.classList.add('selected');
+          }
+          
+          // Apply filter to video preview
+          this.applyFilterToVideo();
+          
+          this.log('Selected filter: ' + filterType);
+        }
+  
+        applyFilterToVideo() {
+          // Remove all existing filter classes
+          const filterClasses = ['filter-none', 'filter-sepia', 'filter-grayscale', 'filter-vintage', 'filter-warm', 'filter-cool', 'filter-dramatic', 'filter-dreamy'];
+          filterClasses.forEach(cls => {
+            this.video.classList.remove(cls);
+          });
+          
+          // Add new filter class
+          this.video.classList.add('filter-' + this.selectedFilter);
+          
+          this.log('Applied filter to video: filter-' + this.selectedFilter);
+        }
+  
         toggleDrawingMode() {
           this.drawingMode = !this.drawingMode;
           const button = document.getElementById('drawing-mode-btn');
@@ -256,7 +288,6 @@ export function getPhotoBoothJS(): string {
           const statusIndicator = document.getElementById('drawing-status');
           
           if (this.drawingMode) {
-            // Enable drawing mode
             canvas.classList.add('drawing-mode');
             button.textContent = '🎨 Drawing Mode: ON';
             button.classList.add('active');
@@ -264,7 +295,6 @@ export function getPhotoBoothJS(): string {
             statusIndicator.style.color = '#28a745';
             this.updateStatus('🎨 Drawing mode enabled! Click and drag to draw. Toggle off to move accessories.', 'ready');
           } else {
-            // Disable drawing mode
             canvas.classList.remove('drawing-mode');
             button.textContent = '🎨 Drawing Mode: OFF';
             button.classList.remove('active');
@@ -360,12 +390,10 @@ export function getPhotoBoothJS(): string {
           this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
           this.ensureAccessoryStates();
           
-          // Draw face detection boxes if enabled
           if (this.showFaceBoxes) {
             this.drawFaceBoxes();
           }
           
-          // Draw accessories in order
           const drawOrder = ['face', 'hat', 'glasses', 'extra'];
           this.detectedFaces.forEach((detection, faceIdx) => {
             const bbox = detection.boundingBox;
@@ -387,26 +415,22 @@ export function getPhotoBoothJS(): string {
             const bbox = detection.boundingBox;
             const faceId = detection.faceId || faceIdx;
             
-            // Draw bounding box
             this.overlayCtx.strokeRect(bbox.originX, bbox.originY, bbox.width, bbox.height);
             
-            // Draw face label
             this.overlayCtx.fillText(
-              \`Face \${faceId + 1}\`, 
+              'Face ' + (faceId + 1), 
               bbox.originX, 
               bbox.originY - 5
             );
             
-            // Draw confidence score
             if (detection.confidence) {
               this.overlayCtx.fillText(
-                \`\${(detection.confidence * 100).toFixed(0)}%\`, 
+                (detection.confidence * 100).toFixed(0) + '%', 
                 bbox.originX, 
                 bbox.originY + bbox.height + 20
               );
             }
             
-            // Draw landmarks
             if (detection.keypoints) {
               this.overlayCtx.fillStyle = '#ff0000';
               detection.keypoints.forEach((point, idx) => {
@@ -514,7 +538,6 @@ export function getPhotoBoothJS(): string {
           state._handleRadius = Math.max(this.resizeHandleSize, fontSize * 0.12);
         }
   
-        // Drawing functions
         getCanvasPos(e, canvas) {
           const rect = canvas.getBoundingClientRect();
           const scaleX = canvas.width / rect.width;
@@ -534,7 +557,7 @@ export function getPhotoBoothJS(): string {
         }
   
         onDrawingStart(e) {
-          if (!this.drawingMode) return; // Only draw when drawing mode is enabled
+          if (!this.drawingMode) return;
           
           this.isDrawing = true;
           const pos = this.getCanvasPos(e, this.drawingCanvas);
@@ -551,7 +574,7 @@ export function getPhotoBoothJS(): string {
         }
   
         onDrawingMove(e) {
-          if (!this.drawingMode || !this.isDrawing) return; // Only draw when drawing mode is enabled
+          if (!this.drawingMode || !this.isDrawing) return;
           
           const pos = this.getCanvasPos(e, this.drawingCanvas);
           
@@ -569,7 +592,7 @@ export function getPhotoBoothJS(): string {
         }
   
         onDrawingEnd(e) {
-          if (!this.drawingMode) return; // Only handle when drawing mode is enabled
+          if (!this.drawingMode) return;
           
           this.isDrawing = false;
           this.lastDrawPoint = null;
@@ -589,14 +612,42 @@ export function getPhotoBoothJS(): string {
           canvas.width = this.video.videoWidth;
           canvas.height = this.video.videoHeight;
           
-          // Draw video
-          ctx.drawImage(this.video, 0, 0);
+          // Clear any existing filter on the context
+          ctx.filter = 'none';
+          
+          // Create a temporary canvas for applying filters to video
+          const tempCanvas = document.createElement('canvas');
+          tempCanvas.width = this.video.videoWidth;
+          tempCanvas.height = this.video.videoHeight;
+          const tempCtx = tempCanvas.getContext('2d');
+          
+          // Apply filter to temp canvas if needed
+          if (this.selectedFilter !== 'none') {
+            tempCtx.filter = this.getFilterCSS(this.selectedFilter);
+          }
+          
+          // Draw video with filter to temp canvas
+          tempCtx.drawImage(this.video, 0, 0);
+          
+          // Draw the filtered video to main canvas
+          ctx.drawImage(tempCanvas, 0, 0);
+          
+          // Reset filter for overlays (we want accessories and drawings without filter)
+          ctx.filter = 'none';
           
           // Draw accessories
           ctx.drawImage(this.overlayCanvas, 0, 0);
           
           // Draw user drawings
           ctx.drawImage(this.drawingCanvas, 0, 0);
+          
+          // Remove all existing filter classes from captured canvas
+          const filterClasses = ['filter-none', 'filter-sepia', 'filter-grayscale', 'filter-vintage', 'filter-warm', 'filter-cool', 'filter-dramatic', 'filter-dreamy'];
+          filterClasses.forEach(cls => {
+            canvas.classList.remove(cls);
+          });
+          
+          // Don't add filter class to captured canvas since filter is already baked in
           
           // Show the centered photo container
           container.classList.add('show');
@@ -605,14 +656,27 @@ export function getPhotoBoothJS(): string {
           document.getElementById('upload-btn').style.display = 'block';
           document.getElementById('share-btn').style.display = 'none';
           
-          this.updateStatus('Photo captured! 📸 Upload to cloud to share it!', 'ready');
-          this.log('Photo captured successfully');
+          this.updateStatus('Photo captured with ' + (this.selectedFilter === 'none' ? 'no filter' : this.selectedFilter + ' filter') + '! 📸 Upload to cloud to share it!', 'ready');
+          this.log('Photo captured successfully with filter: ' + this.selectedFilter);
+        }
+  
+        getFilterCSS(filterType) {
+          const filters = {
+            'sepia': 'sepia(1) contrast(1.15) brightness(1.1) saturate(1.2)',
+            'grayscale': 'grayscale(1) contrast(1.2) brightness(1.05)',
+            'vintage': 'sepia(0.6) contrast(1.3) brightness(1.15) hue-rotate(-15deg) saturate(1.4)',
+            'warm': 'hue-rotate(-20deg) saturate(1.4) brightness(1.15) contrast(1.1)',
+            'cool': 'hue-rotate(20deg) saturate(1.3) brightness(1.08) contrast(1.15)',
+            'dramatic': 'contrast(1.6) brightness(0.95) saturate(1.4)',
+            'dreamy': 'blur(0.8px) brightness(1.25) saturate(0.85) contrast(0.9) hue-rotate(5deg)'
+          };
+          return filters[filterType] || 'none';
         }
   
         downloadPhoto() {
           this.log('Downloading photo...');
           const link = document.createElement('a');
-          link.download = \`photobooth-\${Date.now()}.png\`;
+          link.download = 'photobooth-' + Date.now() + '.png';
           link.href = this.capturedCanvas.toDataURL();
           link.click();
           this.log('Photo download initiated');
@@ -632,6 +696,7 @@ export function getPhotoBoothJS(): string {
             const formData = new FormData();
             formData.append('photo', blob, 'photo.png');
             formData.append('accessories', JSON.stringify(this.selectedAccessories));
+            formData.append('filter', this.selectedFilter);
             
             this.log('Sending upload request...');
             
@@ -689,7 +754,7 @@ export function getPhotoBoothJS(): string {
             
             const result = await response.json();
             this.log('Share result: ' + JSON.stringify(result));
-            const shareUrl = \`\${window.location.origin}/share/\${result.shareId}\`;
+            const shareUrl = window.location.origin + '/share/' + result.shareId;
             
             document.getElementById('share-url').textContent = shareUrl;
             document.getElementById('share-section').style.display = 'block';
@@ -732,11 +797,11 @@ export function getPhotoBoothJS(): string {
               return;
             }
             
-            gallery.innerHTML = photos.map(photo => \`
-              <div class="gallery-item" onclick="window.open('/api/photo/\${photo.id}', '_blank')">
-                <img src="/api/photo/\${photo.id}" alt="Photo" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22120%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23f0f0f0%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22>📷</text></svg>'">
-              </div>
-            \`).join('');
+            gallery.innerHTML = photos.map(photo => 
+              '<div class="gallery-item" onclick="window.open(' + "'/api/photo/" + photo.id + "'" + ', ' + "'_blank'" + ')">' +
+                '<img src="' + '/api/photo/' + photo.id + '" alt="Photo" loading="lazy" onerror="this.src=' + "'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22120%22><rect width=%22100%25%22 height=%22100%25%22 fill=%22%23f0f0f0%22/><text x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22%23999%22>📷</text></svg>'" + '">' +
+              '</div>'
+            ).join('');
             
             this.log('Gallery updated successfully with ' + photos.length + ' photos');
             
@@ -761,9 +826,10 @@ export function getPhotoBoothJS(): string {
             btn.classList.remove('selected')
           );
           
-          // Hide captured photo
           const container = document.getElementById('captured-photo-container');
-          container.classList.remove('show');
+          if (container) {
+            container.classList.remove('show');
+          }
           document.getElementById('download-btn').style.display = 'none';
           document.getElementById('upload-btn').style.display = 'none';
           document.getElementById('share-btn').style.display = 'none';
@@ -777,13 +843,15 @@ export function getPhotoBoothJS(): string {
           this.clearAccessories();
           this.clearDrawing();
           
+          this.selectFilter('none');
+          
           this.updateStatus('Everything cleared! 🧹 Ready for a new photo!', 'ready');
           this.log('Everything cleared successfully');
         }
   
         updateStatus(message, type) {
           this.status.textContent = message;
-          this.status.className = \`status \${type}\`;
+          this.status.className = 'status ' + type;
         }
   
         getPointerPos(e) {
