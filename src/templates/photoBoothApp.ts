@@ -1,5 +1,5 @@
 // File: src/templates/photoBoothApp.ts
-// Main photo booth application template with AI haiku generation UI
+// Enhanced photo booth template with text overlay system UI
 
 import { getPhotoBoothCSS } from '../assets/styles';
 import { getPhotoBoothJS } from '../assets/photoBooth';
@@ -10,7 +10,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Face Detection Photo Booth with Drawing & AI</title>
+  <title>Face Detection Photo Booth with Drawing, Text & AI</title>
   <script type="module">
     import * as mpVision from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs';
     window.mpVision = mpVision;
@@ -187,7 +187,293 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
       filter: blur(0.8px) brightness(1.25) saturate(0.85) contrast(0.9) hue-rotate(5deg) !important;
     }
     
-    /* AI Haiku Container Styles */
+    /* AI Filter Description Styles */
+    .ai-filter-section {
+      margin-bottom: 15px;
+      padding: 15px;
+      background: linear-gradient(135deg, rgba(156, 39, 176, 0.05), rgba(103, 58, 183, 0.05));
+      border-radius: 12px;
+      border: 2px solid rgba(156, 39, 176, 0.2);
+    }
+    
+    .filter-description-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    
+    .filter-description-input {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid rgba(156, 39, 176, 0.3);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.9);
+      transition: all 0.3s ease;
+    }
+    
+    .filter-description-input:focus {
+      outline: none;
+      border-color: #9c27b0;
+      box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.1);
+    }
+    
+    .filter-description-input::placeholder {
+      color: #888;
+      font-style: italic;
+    }
+    
+    .btn-ai-filter {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .btn-ai-filter:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
+    }
+    
+    .btn-ai-filter:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .filter-interpretation {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(156, 39, 176, 0.1);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: #673ab7;
+      font-weight: 500;
+    }
+    
+    /* NEW: Text Overlay Styles */
+    .text-panel {
+      margin: 15px 0;
+      padding: 15px;
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      border-radius: 12px;
+      border: 2px solid #ff9800;
+    }
+    
+    .text-input-section {
+      margin-bottom: 15px;
+    }
+    
+    .text-input-container {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .text-input {
+      flex: 1;
+      padding: 12px 15px;
+      border: 2px solid #ff9800;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: rgba(255, 255, 255, 0.9);
+      transition: all 0.3s ease;
+    }
+    
+    .text-input:focus {
+      outline: none;
+      border-color: #f57c00;
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+    }
+    
+    .text-input::placeholder {
+      color: #888;
+      font-style: italic;
+    }
+    
+    .btn-add-text {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .btn-add-text:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+    }
+    
+    .text-instructions {
+      font-size: 0.8rem;
+      color: #e65100;
+      margin-bottom: 10px;
+      padding: 8px;
+      background: rgba(255, 152, 0, 0.1);
+      border-radius: 6px;
+      line-height: 1.4;
+    }
+    
+    .text-color-palette {
+      display: flex;
+      gap: 8px;
+      margin: 10px 0;
+      flex-wrap: wrap;
+    }
+    
+    .text-color-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: 3px solid #ddd;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .text-color-btn:hover {
+      transform: scale(1.1);
+      border-color: #ff9800;
+    }
+    
+    .text-color-btn.selected {
+      border-color: #ff9800;
+      border-width: 4px;
+      transform: scale(1.1);
+      box-shadow: 0 3px 8px rgba(255, 152, 0, 0.3);
+    }
+    
+    .text-size-container {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin: 10px 0;
+    }
+    
+    .text-size-slider {
+      flex: 1;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #ffcc80 0%, #ff9800 100%);
+      outline: none;
+      cursor: pointer;
+    }
+    
+    .text-size-slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ff9800;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    .text-size-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ff9800;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    .text-preview {
+      font-family: Arial, sans-serif;
+      color: #ffffff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+      padding: 8px;
+      background: rgba(0,0,0,0.1);
+      border-radius: 6px;
+      text-align: center;
+      margin: 8px 0;
+      border: 1px dashed #ff9800;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    /* NEW: Font Selection Styles */
+    .font-selection {
+      margin: 10px 0;
+    }
+    
+    .font-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .font-btn {
+      padding: 8px 12px;
+      border: 2px solid #ff9800;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.9);
+      color: #e65100;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .font-btn:hover {
+      background: rgba(255, 152, 0, 0.1);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
+    }
+    
+    .font-btn.selected {
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      color: white;
+      border-color: #f57c00;
+      box-shadow: 0 3px 10px rgba(255, 152, 0, 0.3);
+    }
+    
+    .font-btn[data-font="Arial"] {
+      font-family: Arial, sans-serif;
+    }
+    
+    .font-btn[data-font="Comic Sans MS"] {
+      font-family: "Comic Sans MS", cursive, sans-serif;
+    }
+    
+    .font-btn[data-font="Times New Roman"] {
+      font-family: "Times New Roman", serif;
+    }
+    
+    .font-btn[data-font="Courier New"] {
+      font-family: "Courier New", monospace;
+    }
+    
+    .font-btn[data-font="Georgia"] {
+      font-family: Georgia, serif;
+    }
+    
+    .font-btn[data-font="Verdana"] {
+      font-family: Verdana, sans-serif;
+    }
     .haiku-container {
       display: none;
       margin: 20px 0;
@@ -272,7 +558,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
 </head>
 <body>
   <div class="photo-booth">
-    <h1 class="title">🎭 Cloudflare AI Photo Booth w/ Mediapipe 🤖🎨📸</h1>
+    <h1 class="title">🎭 AI Photo Booth 🤖🎨📸📝</h1>
     
     <div class="status" id="status">Loading camera and face detection...</div>
     
@@ -340,12 +626,93 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         </div>
       </div>
 
+      <!-- NEW: Text Overlay Panel -->
+      <div class="text-panel">
+        <div class="panel-title">📝 Text Overlays</div>
+        
+        <div class="text-instructions">
+          💡 <strong>Smart Text Controls:</strong><br>
+          • Just type text → adds to top-left<br>
+          • "write 'HELLO' in comic sans on my head" → custom font on face<br>
+          • <strong>Double-click text</strong> → edit content, color, font, size<br>
+          • <strong>Drag to trash</strong> → delete text/emojis<br>
+          • "place text left of the 2nd person" → targets specific person<br>
+          • All text is draggable and editable after placement!
+        </div>
+        
+        <div class="text-input-section">
+          <div class="text-input-container">
+            <input 
+              type="text" 
+              id="text-input" 
+              placeholder="Try: 'write red AWESOME in comic sans on my head' or 'add 🔥 left of face'"
+              class="text-input"
+            >
+            <button id="add-text-btn" class="btn-add-text">📝 Add Text</button>
+          </div>
+          
+          <div class="text-preview" id="text-preview">Sample Text</div>
+        </div>
+        
+        <div class="drawing-section">
+          <div class="category-title">🎨 Text Colors</div>
+          <div class="text-color-palette">
+            <div class="text-color-btn selected" style="background: #ffffff; border-color: #000" data-color="#ffffff"></div>
+            <div class="text-color-btn" style="background: #000000" data-color="#000000"></div>
+            <div class="text-color-btn" style="background: #ff0000" data-color="#ff0000"></div>
+            <div class="text-color-btn" style="background: #00ff00" data-color="#00ff00"></div>
+            <div class="text-color-btn" style="background: #0000ff" data-color="#0000ff"></div>
+            <div class="text-color-btn" style="background: #ffff00" data-color="#ffff00"></div>
+            <div class="text-color-btn" style="background: #ff00ff" data-color="#ff00ff"></div>
+            <div class="text-color-btn" style="background: #00ffff" data-color="#00ffff"></div>
+            <div class="text-color-btn" style="background: #ffa500" data-color="#ffa500"></div>
+            <div class="text-color-btn" style="background: #8b4513" data-color="#8b4513"></div>
+          </div>
+        </div>
+        
+        <div class="drawing-section">
+          <div class="category-title">🔤 Font Family</div>
+          <div class="font-grid">
+            <button class="font-btn selected" data-font="Arial">Arial</button>
+            <button class="font-btn" data-font="Comic Sans MS">Comic Sans</button>
+            <button class="font-btn" data-font="Times New Roman">Times</button>
+            <button class="font-btn" data-font="Courier New">Courier</button>
+            <button class="font-btn" data-font="Georgia">Georgia</button>
+            <button class="font-btn" data-font="Verdana">Verdana</button>
+          </div>
+        </div>
+        
+        <div class="drawing-section">
+          <div class="category-title">📏 Text Size</div>
+          <div class="text-size-container">
+            <span style="font-size: 12px;">A</span>
+            <input type="range" id="text-size" class="text-size-slider" min="12" max="72" value="24">
+            <span style="font-size: 24px;">A</span>
+          </div>
+        </div>
+      </div>
+
       <div class="action-buttons">
         <button class="btn btn-primary" id="capture-btn">📸 Capture Photo</button>
         <button class="btn btn-mode" id="drawing-mode-btn">🎨 Drawing Mode: OFF</button>
         
         <div class="filter-section">
           <div class="category-title">🎨 Photo Filters</div>
+          
+          <!-- AI Filter Description Input -->
+          <div class="ai-filter-section">
+            <div class="filter-description-container">
+              <input 
+                type="text" 
+                id="filter-description" 
+                placeholder="Describe the mood... (e.g., 'make this look sad', 'vintage vibes')"
+                class="filter-description-input"
+              >
+              <button id="apply-description-btn" class="btn-ai-filter">🤖 Apply</button>
+            </div>
+            <div class="filter-interpretation" id="filter-interpretation" style="display: none;"></div>
+          </div>
+          
           <div class="filter-grid">
             <button class="filter-btn selected" data-filter="none">Original</button>
             <button class="filter-btn" data-filter="sepia">Sepia</button>
@@ -360,6 +727,8 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         
         <button class="btn btn-secondary" id="clear-accessories-btn">🗑️ Clear Accessories</button>
         <button class="btn btn-warning" id="clear-drawing-btn">🎨 Clear Drawing</button>
+        <button class="btn btn-warning" id="clear-text-btn">📝 Clear Text</button>
+        <button class="btn btn-trash-toggle active" id="toggle-trash-btn">🗑️ Hide Trash</button>
         <button class="btn btn-warning" id="clear-all-btn">🧹 Clear Everything</button>
         <button class="btn btn-secondary" id="download-btn" style="display: none;">💾 Download</button>
         <button class="btn btn-success" id="upload-btn" style="display: none;">☁️ Save to Cloudflare R2</button>
@@ -374,7 +743,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         <div class="drawing-section">
           <div class="category-title" id="drawing-status">🎭 Accessory Mode Active</div>
           <div style="text-align: center; font-size: 0.85rem; color: #666; margin-bottom: 15px;">
-            Use the "Drawing Mode" button to switch between moving accessories and drawing
+            Use the "Drawing Mode" button to switch between moving accessories/text and drawing<br>
           </div>
         </div>
         
@@ -408,7 +777,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
       <canvas id="captured-photo"></canvas>
     </div>
     
-    <!-- NEW: AI Haiku Display -->
+    <!-- AI Haiku Display -->
     <div class="haiku-container" id="haiku-container">
       <div class="haiku-title">
         🤖 AI Generated Haiku 🎌
@@ -416,6 +785,44 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
       <div class="haiku-text" id="haiku-text"></div>
       <div class="haiku-actions">
         <button class="btn-haiku" onclick="copyHaiku()">📋 Copy Haiku</button>
+        <button class="btn-haiku" id="add-haiku-btn" style="display: none; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); margin-left: 10px;">📝 Add to Photo</button>
+      </div>
+    </div>
+    
+    <!-- Text Edit Panel -->
+    <div class="text-edit-panel" id="text-edit-panel">
+      <div class="edit-panel-header">✏️ Edit Text</div>
+      
+      <div class="edit-form-group">
+        <label for="edit-text-content">Text Content:</label>
+        <input type="text" id="edit-text-content" class="edit-text-input" placeholder="Enter text content">
+      </div>
+      
+      <div class="edit-form-group">
+        <label for="edit-text-color">Text Color:</label>
+        <input type="color" id="edit-text-color" class="edit-color-input" value="#ffffff">
+      </div>
+      
+      <div class="edit-form-group">
+        <label for="edit-text-size">Text Size:</label>
+        <input type="range" id="edit-text-size" min="12" max="72" value="24" class="text-size-slider">
+      </div>
+      
+      <div class="edit-form-group">
+        <label>Font Family:</label>
+        <div class="edit-font-grid">
+          <button class="edit-font-btn selected" data-font="Arial">Arial</button>
+          <button class="edit-font-btn" data-font="Comic Sans MS">Comic</button>
+          <button class="edit-font-btn" data-font="Times New Roman">Times</button>
+          <button class="edit-font-btn" data-font="Courier New">Courier</button>
+          <button class="edit-font-btn" data-font="Georgia">Georgia</button>
+          <button class="edit-font-btn" data-font="Verdana">Verdana</button>
+        </div>
+      </div>
+      
+      <div class="edit-actions">
+        <button class="btn-edit btn-edit-apply" id="apply-edit-btn">✅ Apply</button>
+        <button class="btn-edit btn-edit-cancel" id="cancel-edit-btn">❌ Cancel</button>
       </div>
     </div>
     

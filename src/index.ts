@@ -1,11 +1,11 @@
 // File: src/index.ts
-// Main Worker entry point with AI haiku generation endpoint
+// Enhanced Worker entry point with AI text command parsing endpoint
 
 import { handleUpload } from './handlers/uploadHandler';
 import { handleGallery } from './handlers/galleryHandler';
 import { handleCreateShare, handleSharePage } from './handlers/shareHandler';
 import { handleAnalytics } from './handlers/analyticsHandler';
-import { handleHaikuRequest } from './handlers/aiHandler';
+import { handleHaikuRequest, getHaikuForPhoto, handleFilterInterpretation, handleTextCommandParsing } from './handlers/aiHandler';
 import { handlePhoto } from './handlers/photoHandler';
 import { servePhotoBoothApp } from './templates/photoBoothApp';
 import { CORS_HEADERS } from './utils/constants';
@@ -64,9 +64,25 @@ export default {
           return handleAnalytics(env, CORS_HEADERS);
         }
 
-        // AI Haiku generation - NEW ENDPOINT
+        // AI Haiku generation
         if (pathname === '/api/haiku' && method === 'POST') {
           return handleHaikuRequest(request, env, CORS_HEADERS);
+        }
+
+        // Get haiku for specific photo
+        if (pathname.startsWith('/api/haiku/') && method === 'GET') {
+          const photoId = pathname.split('/api/haiku/')[1];
+          return getHaikuForPhoto(photoId, env, CORS_HEADERS);
+        }
+
+        // AI filter interpretation
+        if (pathname === '/api/filter-description' && method === 'POST') {
+          return handleFilterInterpretation(request, env, CORS_HEADERS);
+        }
+
+        // NEW: AI text command parsing
+        if (pathname === '/api/parse-text-command' && method === 'POST') {
+          return handleTextCommandParsing(request, env, CORS_HEADERS);
         }
       }
 

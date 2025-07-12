@@ -217,6 +217,33 @@ export function getPhotoBoothCSS(): string {
       animation: pulse 2s infinite;
     }
 
+    .btn-trash-toggle {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn-trash-toggle.active {
+      background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+      animation: pulse 2s infinite;
+    }
+
+    .btn-trash-toggle::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn-trash-toggle:hover::before {
+      left: 100%;
+    }
+
     @keyframes pulse {
       0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
       70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
@@ -361,6 +388,189 @@ export function getPhotoBoothCSS(): string {
       object-fit: cover;
     }
 
+    /* NEW: Text Edit Panel Styles */
+    .text-edit-panel {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      z-index: 1000;
+      min-width: 400px;
+      max-width: 500px;
+      border: 3px solid #ff9800;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+    }
+
+    .text-edit-panel::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: -1;
+      backdrop-filter: blur(5px);
+    }
+
+    .edit-panel-header {
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ff9800;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #ff9800;
+    }
+
+    .edit-form-group {
+      margin-bottom: 20px;
+    }
+
+    .edit-form-group label {
+      display: block;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .edit-text-input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      background: white;
+    }
+
+    .edit-text-input:focus {
+      outline: none;
+      border-color: #ff9800;
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+    }
+
+    .edit-color-input {
+      width: 60px;
+      height: 40px;
+      border: 2px solid #dee2e6;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .edit-color-input:hover {
+      border-color: #ff9800;
+      transform: scale(1.05);
+    }
+
+    .edit-font-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .edit-font-btn {
+      padding: 8px 12px;
+      border: 2px solid #dee2e6;
+      border-radius: 6px;
+      background: white;
+      color: #495057;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .edit-font-btn:hover {
+      border-color: #ff9800;
+      background: rgba(255, 152, 0, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .edit-font-btn.selected {
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      color: white;
+      border-color: #f57c00;
+      box-shadow: 0 3px 10px rgba(255, 152, 0, 0.3);
+    }
+
+    .edit-font-btn[data-font="Arial"] {
+      font-family: Arial, sans-serif;
+    }
+
+    .edit-font-btn[data-font="Comic Sans MS"] {
+      font-family: "Comic Sans MS", cursive, sans-serif;
+    }
+
+    .edit-font-btn[data-font="Times New Roman"] {
+      font-family: "Times New Roman", serif;
+    }
+
+    .edit-font-btn[data-font="Courier New"] {
+      font-family: "Courier New", monospace;
+    }
+
+    .edit-font-btn[data-font="Georgia"] {
+      font-family: Georgia, serif;
+    }
+
+    .edit-font-btn[data-font="Verdana"] {
+      font-family: Verdana, sans-serif;
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+      justify-content: center;
+    }
+
+    .btn-edit {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 120px;
+    }
+
+    .btn-edit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .btn-edit-apply {
+      background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+      color: white;
+    }
+
+    .btn-edit-cancel {
+      background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+      color: white;
+    }
+
     .footer {
       text-align: center;
       margin-top: 30px;
@@ -441,6 +651,16 @@ export function getPhotoBoothCSS(): string {
       .gallery-grid {
         grid-template-columns: repeat(3, 1fr);
       }
+
+      .text-edit-panel {
+        min-width: 90vw;
+        max-width: 90vw;
+        padding: 20px;
+      }
+
+      .edit-font-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     @media (max-width: 480px) {
@@ -464,6 +684,16 @@ export function getPhotoBoothCSS(): string {
       
       .gallery-grid {
         grid-template-columns: repeat(2, 1fr);
+      }
+
+      .text-edit-panel {
+        min-width: 95vw;
+        max-width: 95vw;
+        padding: 15px;
+      }
+
+      .edit-actions {
+        flex-direction: column;
       }
     }
   `;

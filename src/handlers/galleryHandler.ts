@@ -1,5 +1,5 @@
 // File: handlers/galleryHandler.ts
-// Simplified gallery handler matching original working implementation
+// Updated gallery handler to display all photos without limit
 
 import { createErrorResponse, createSuccessResponse } from '../utils/helpers';
 import { ERROR_MESSAGES, BUCKET_NAME } from '../utils/constants';
@@ -10,10 +10,7 @@ export async function handleGallery(
   corsHeaders: Record<string, string>
 ): Promise<Response> {
   try {
-    const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '12');
-    
-    console.log(`Loading gallery with limit: ${limit}`);
+    console.log('Loading all photos from gallery');
     
     // Check if R2 bucket is properly bound
     const bucket = env[BUCKET_NAME] || env.PHOTOBOOTH_PHOTOS;
@@ -22,10 +19,8 @@ export async function handleGallery(
       return createErrorResponse('Storage not configured properly', 500, corsHeaders);
     }
     
-    // List objects from R2 bucket - minimal approach
-    const listResult = await bucket.list({
-      limit: Math.min(limit, 50)
-    });
+    // List all objects from R2 bucket
+    const listResult = await bucket.list();
     
     if (!listResult || !listResult.objects) {
       console.log('No objects found in bucket');
@@ -37,10 +32,9 @@ export async function handleGallery(
       console.log(`- ${obj.key} (${obj.size} bytes, uploaded: ${obj.uploaded})`);
     });
     
-    // Simple mapping - just return all objects as photos
+    // Simple mapping - return all objects as photos
     const photos = listResult.objects
       .sort((a:any, b:any) => new Date(b.uploaded).getTime() - new Date(a.uploaded).getTime())
-      .slice(0, limit)
       .map((obj:any) => ({
         id: obj.key,
         uploadedAt: obj.uploaded,
