@@ -1,5 +1,5 @@
 // File: src/assets/photoBooth.ts
-// Frontend JavaScript for the photo booth application with drawing mode toggle and filters
+// Frontend JavaScript for the photo booth application with AI haiku generation
 
 export function getPhotoBoothJS(): string {
     return `
@@ -42,6 +42,7 @@ export function getPhotoBoothJS(): string {
           this.lastDrawPoint = null;
   
           this.selectedFilter = 'none';
+          this.hasDrawing = false;
   
           this.init();
         }
@@ -214,6 +215,12 @@ export function getPhotoBoothJS(): string {
           document.getElementById('share-btn').addEventListener('click', () => {
             this.log('Share button clicked');
             this.sharePhoto();
+          });
+          
+          // NEW: AI Haiku generation button
+          document.getElementById('haiku-btn').addEventListener('click', () => {
+            this.log('Haiku button clicked');
+            this.generateHaiku();
           });
           
           document.getElementById('gallery-btn').addEventListener('click', () => {
@@ -560,6 +567,7 @@ export function getPhotoBoothJS(): string {
           if (!this.drawingMode) return;
           
           this.isDrawing = true;
+          this.hasDrawing = true;
           const pos = this.getCanvasPos(e, this.drawingCanvas);
           this.lastDrawPoint = pos;
           
@@ -600,6 +608,7 @@ export function getPhotoBoothJS(): string {
   
         clearDrawing() {
           this.drawingCtx.clearRect(0, 0, this.drawingCanvas.width, this.drawingCanvas.height);
+          this.hasDrawing = false;
           this.log('Drawing cleared');
         }
   
@@ -647,14 +656,13 @@ export function getPhotoBoothJS(): string {
             canvas.classList.remove(cls);
           });
           
-          // Don't add filter class to captured canvas since filter is already baked in
-          
           // Show the centered photo container
           container.classList.add('show');
           
           document.getElementById('download-btn').style.display = 'block';
           document.getElementById('upload-btn').style.display = 'block';
           document.getElementById('share-btn').style.display = 'none';
+          document.getElementById('haiku-btn').style.display = 'block'; // Show AI haiku button
           
           this.updateStatus('Photo captured with ' + (this.selectedFilter === 'none' ? 'no filter' : this.selectedFilter + ' filter') + '! 📸 Upload to cloud to share it!', 'ready');
           this.log('Photo captured successfully with filter: ' + this.selectedFilter);
@@ -697,6 +705,7 @@ export function getPhotoBoothJS(): string {
             formData.append('photo', blob, 'photo.png');
             formData.append('accessories', JSON.stringify(this.selectedAccessories));
             formData.append('filter', this.selectedFilter);
+            formData.append('hasDrawing', this.hasDrawing.toString());
             
             this.log('Sending upload request...');
             
@@ -718,7 +727,7 @@ export function getPhotoBoothJS(): string {
             this.lastPhotoId = result.photoId;
             
             document.getElementById('share-btn').style.display = 'block';
-            this.updateStatus('Photo uploaded successfully! ✅', 'ready');
+            this.updateStatus('Photo uploaded successfully! ✅ Creative filename: ' + result.filename, 'ready');
             this.loadGallery();
             
           } catch (error) {
@@ -726,6 +735,66 @@ export function getPhotoBoothJS(): string {
             this.log('Upload error: ' + error.message);
             this.updateStatus('Upload failed ❌: ' + error.message, 'error');
           }
+        }
+  
+        // NEW: AI Haiku Generation
+        async generateHaiku() {
+          try {
+            this.log('Generating AI haiku...');
+            this.updateStatus('🤖 AI is composing a haiku about your photo...', 'loading');
+            
+            const metadata = {
+              accessories: this.selectedAccessories,
+              filter: this.selectedFilter,
+              hasDrawing: this.hasDrawing
+            };
+            
+            const response = await fetch('/api/haiku', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(metadata)
+            });
+            
+            this.log('Haiku response status: ' + response.status);
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              this.log('Haiku error response: ' + errorText);
+              throw new Error('Haiku generation failed');
+            }
+            
+            const result = await response.json();
+            this.log('Haiku result: ' + JSON.stringify(result));
+            
+            // Display the haiku
+            this.displayHaiku(result.haiku);
+            this.updateStatus('🎌 AI haiku generated! ✨', 'ready');
+            
+          } catch (error) {
+            console.error('Haiku generation error:', error);
+            this.log('Haiku error: ' + error.message);
+            this.updateStatus('Haiku generation failed ❌: ' + error.message, 'error');
+          }
+        }
+  
+        displayHaiku(haiku) {
+          const haikuContainer = document.getElementById('haiku-container');
+          const haikuText = document.getElementById('haiku-text');
+          
+          haikuText.textContent = haiku;
+          haikuContainer.style.display = 'block';
+          
+          // Add a nice animation
+          haikuContainer.style.opacity = '0';
+          haikuContainer.style.transform = 'translateY(20px)';
+          
+          setTimeout(() => {
+            haikuContainer.style.transition = 'all 0.5s ease';
+            haikuContainer.style.opacity = '1';
+            haikuContainer.style.transform = 'translateY(0)';
+          }, 100);
+          
+          this.log('Haiku displayed: ' + haiku);
         }
   
         async sharePhoto() {
@@ -833,7 +902,9 @@ export function getPhotoBoothJS(): string {
           document.getElementById('download-btn').style.display = 'none';
           document.getElementById('upload-btn').style.display = 'none';
           document.getElementById('share-btn').style.display = 'none';
+          document.getElementById('haiku-btn').style.display = 'none';
           document.getElementById('share-section').style.display = 'none';
+          document.getElementById('haiku-container').style.display = 'none';
           
           this.log('Accessories cleared successfully');
         }
@@ -1001,6 +1072,13 @@ export function getPhotoBoothJS(): string {
         const shareUrl = document.getElementById('share-url').textContent;
         navigator.clipboard.writeText(shareUrl).then(() => {
           alert('Share URL copied to clipboard! 📋');
+        });
+      }
+  
+      function copyHaiku() {
+        const haikuText = document.getElementById('haiku-text').textContent;
+        navigator.clipboard.writeText(haikuText).then(() => {
+          alert('Haiku copied to clipboard! 🎌');
         });
       }
   

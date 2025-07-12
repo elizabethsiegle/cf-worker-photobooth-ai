@@ -9,6 +9,8 @@ A real-time face detection photo booth with drawing tools, Instagram-style filte
 - Instagram-style filters (Sepia, B&W, Vintage, Warm, Cool, Dramatic, Dreamy)
 - Cloud storage with [Cloudflare R2](https://developers.cloudflare.com/r2/)
 - Aggregate analytics data storage + photo sharing management with [Cloudflare KV](https://developers.cloudflare.com/kv/)
+- AI haiku generation about your photos w/ [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/)
+- AI-powered creative filenames using Workers AI (Llama 4 Scout)
 - Photo sharing with shareable links
 - Gallery view of recent photos
 

@@ -10,6 +10,9 @@
 	"observability": {
 		"enabled": true
 	},
+	"ai": {
+		"binding": "AI"
+	},
 	"kv_namespaces": [
 		{ 
 			"binding": "PHOTOBOOTH_KV",

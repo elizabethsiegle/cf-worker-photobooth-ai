@@ -1,5 +1,5 @@
 // File: src/templates/photoBoothApp.ts
-// Main photo booth application template with drawing mode toggle and filters
+// Main photo booth application template with AI haiku generation UI
 
 import { getPhotoBoothCSS } from '../assets/styles';
 import { getPhotoBoothJS } from '../assets/photoBooth';
@@ -10,7 +10,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Face Detection Photo Booth with Drawing</title>
+  <title>Face Detection Photo Booth with Drawing & AI</title>
   <script type="module">
     import * as mpVision from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs';
     window.mpVision = mpVision;
@@ -186,11 +186,93 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
     .filter-dreamy {
       filter: blur(0.8px) brightness(1.25) saturate(0.85) contrast(0.9) hue-rotate(5deg) !important;
     }
+    
+    /* AI Haiku Container Styles */
+    .haiku-container {
+      display: none;
+      margin: 20px 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+      border: 2px solid #2196f3;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .haiku-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(33, 150, 243, 0.1), transparent);
+      transform: rotate(45deg);
+      animation: shimmer 3s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% { transform: translateX(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) rotate(45deg); }
+    }
+    
+    .haiku-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #1976d2;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .haiku-text {
+      font-family: 'Georgia', serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #333;
+      white-space: pre-line;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      position: relative;
+      z-index: 1;
+      font-style: italic;
+    }
+    
+    .haiku-actions {
+      margin-top: 15px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    .btn-haiku {
+      background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+    }
+    
+    .btn-haiku:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+    }
   </style>
 </head>
 <body>
   <div class="photo-booth">
-    <h1 class="title">🎭 Cloud Photo Booth 🎨📸</h1>
+    <h1 class="title">🎭 Cloudflare AI Photo Booth w/ Mediapipe 🤖🎨📸</h1>
     
     <div class="status" id="status">Loading camera and face detection...</div>
     
@@ -281,6 +363,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         <button class="btn btn-warning" id="clear-all-btn">🧹 Clear Everything</button>
         <button class="btn btn-secondary" id="download-btn" style="display: none;">💾 Download</button>
         <button class="btn btn-success" id="upload-btn" style="display: none;">☁️ Save to Cloudflare R2</button>
+        <button class="btn btn-ai" id="haiku-btn" style="display: none; background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%); color: white;">🤖 Generate AI Haiku</button>
         <button class="btn btn-success" id="share-btn" style="display: none;">🔗 Share Photo</button>
         <button class="btn btn-secondary" id="gallery-btn">🖼️ View Gallery</button>
       </div>
@@ -325,6 +408,17 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
       <canvas id="captured-photo"></canvas>
     </div>
     
+    <!-- NEW: AI Haiku Display -->
+    <div class="haiku-container" id="haiku-container">
+      <div class="haiku-title">
+        🤖 AI Generated Haiku 🎌
+      </div>
+      <div class="haiku-text" id="haiku-text"></div>
+      <div class="haiku-actions">
+        <button class="btn-haiku" onclick="copyHaiku()">📋 Copy Haiku</button>
+      </div>
+    </div>
+    
     <div class="share-section" id="share-section">
       <h3>📤 Photo Shared!</h3>
       <p>Your photo has been saved to the cloud. Share this link:</p>
@@ -339,7 +433,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
   </div>
 
   <div class="footer">
-    made w/ <span class="heart">♥</span> in sf w/ <a href="https://developers.cloudflare.com/workers/" target="_blank">cloudflare workers</a>, <a href="https://mediapipe.dev" target="_blank">mediapipe</a>, <a href="https://developers.cloudflare.com/r2/">Cloudflare R2</a>. Code on GitHub👩🏻‍💻 <a href="https://github.com/elizabethsiegle/cf-worker-photobooth-ai" target="_blank">here</a>
+    made w/ <span class="heart">♥</span> in sf w/ <a href="https://workers.cloudflare.com" target="_blank">cloudflare workers</a>, <a href="https://developers.cloudflare.com/r2/">cloudflare r2</a>, <a href="https://developers.cloudflare.com/kv/">cloudflare kv</a>, <a href="https://developers.cloudflare.com/workers-ai/models/">workers ai</a>, <a href="https://mediapipe.dev" target="_blank">mediapipe</a>
   </div>
 
   <script>
