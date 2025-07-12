@@ -1,21 +1,20 @@
 {
-	"name": "photoboothworkerai",
-	"version": "0.0.0",
-	"private": true,
+	"name": "photobooth-worker",
+	"version": "1.0.0",
+	"description": "Face detection photo booth with drawing capabilities",
+	"main": "dist/worker.js",
 	"scripts": {
-		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"start": "wrangler dev",
-		"test": "vitest",
-		"cf-typegen": "wrangler types"
+	  "build": "webpack --mode production",
+	  "dev": "webpack --mode development --watch",
+	  "deploy": "wrangler deploy",
+	  "type-check": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.8.19",
-		"typescript": "^5.5.2",
-		"vitest": "~3.2.0",
-		"wrangler": "^4.24.3"
-	},
-	"dependencies": {
-		"@mediapipe/tasks-vision": "^0.10.22-rc.20250304"
+	  "@cloudflare/workers-types": "^4.20231218.0",
+	  "@types/node": "^20.0.0",
+	  "typescript": "^5.0.0",
+	  "webpack": "^5.89.0",
+	  "webpack-cli": "^5.1.4",
+	  "ts-loader": "^9.5.1"
 	}
-}
+  }
