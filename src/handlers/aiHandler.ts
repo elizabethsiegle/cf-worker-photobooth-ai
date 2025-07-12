@@ -44,7 +44,13 @@ Make it fun and memorable!`
       }
     ];
 
-    const response = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", { messages });
+    const response = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", { messages }, {
+        gateway: {
+            id: "photobooth-gateway",
+            skipCache: false,
+            cacheTtl: 3360,
+        },
+    });
     
     // Clean up the response to ensure it's filename-safe
     let filename = response.response || 'awesome-photo';
@@ -95,7 +101,15 @@ Capture the playful, creative spirit of a photo booth moment!`
       }
     ];
 
-    const response = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", { messages });
+    const response = await env.AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", { messages },
+        {
+            gateway: {
+                id: "photobooth-gateway",
+                skipCache: false,
+                cacheTtl: 3360,
+            },
+        }
+    );
     
     const haiku = response.response || 
       "Smiling faces shine\nThrough digital magic lens\nMemories captured";
