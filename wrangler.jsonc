@@ -9,7 +9,19 @@
 	"compatibility_date": "2025-07-11",
 	"observability": {
 		"enabled": true
-	}
+	},
+	"kv_namespaces": [
+		{ 
+			"binding": "PHOTOBOOTH_KV",
+			"id": "bb1261352cbe4fb7b55390f21aceecba"
+		}
+	],
+	"r2_buckets": [
+    {
+      "binding": "PHOTOBOOTH_PHOTOS",
+      "bucket_name": "photobooth-photos"
+    }
+  ]
 	/**
 	 * Smart Placement
 	 * Docs: https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
