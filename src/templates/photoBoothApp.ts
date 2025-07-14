@@ -576,7 +576,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         
         <div class="checkbox-section">
           <label>
-            <input type="checkbox" id="show-face-boxes" checked>
+            <input type="checkbox" id="show-face-boxes">
             📦 Show Face Detection Boxes
           </label>
         </div>
@@ -728,7 +728,6 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         <button class="btn btn-secondary" id="clear-accessories-btn">🗑️ Clear Accessories</button>
         <button class="btn btn-warning" id="clear-drawing-btn">🎨 Clear Drawing</button>
         <button class="btn btn-warning" id="clear-text-btn">📝 Clear Text</button>
-        <button class="btn btn-trash-toggle active" id="toggle-trash-btn">🗑️ Hide Trash</button>
         <button class="btn btn-warning" id="clear-all-btn">🧹 Clear Everything</button>
         <button class="btn btn-secondary" id="download-btn" style="display: none;">💾 Download</button>
         <button class="btn btn-success" id="upload-btn" style="display: none;">☁️ Save to Cloudflare R2</button>

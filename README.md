@@ -4,16 +4,16 @@ A real-time face detection photo booth with drawing tools, Instagram-style filte
 #### Features
 
 - Real-time face detection using [MediaPipe](https://ai.google.dev/edge/mediapipe/solutions/vision/face_detector/web_js)
-- Interactive accessories - add, drag, resize, and rotate emojis on faces and heads
-- Drawing mode with customizable brushes and colors
-- Instagram-style filters (Sepia, B&W, Vintage, Warm, Cool, Dramatic, Dreamy)
+- Interactive accessories - add, drag, resize, rotate, and remove emojis on faces and heads
+- Drawing mode with customizable brushes and colors to write/draw directly on picture
+- Instagram-style filters (Sepia, B&W, Vintage, Warm, Cool, Dramatic, Dreamy) + AI-generated filters you describe
 - Cloud storage with [Cloudflare R2](https://developers.cloudflare.com/r2/)
 - Aggregate analytics data storage + photo sharing management with [Cloudflare KV](https://developers.cloudflare.com/kv/)
 - AI haiku generation about your photos w/ [Cloudflare Workers AI](https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/)
-- AI-powered creative filenames using Workers AI (Llama 4 Scout)
+- AI-powered creative R2 filenames using Workers AI (Llama 4 Scout)
 - LLM observability with [AI Gateway](https://developers.cloudflare.com/ai-gateway/)
 - Photo sharing with shareable links
-- Gallery view of recent photos
+- Gallery view of all photos saved to R2
 
 #### Prerequisites
 

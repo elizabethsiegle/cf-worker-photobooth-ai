@@ -24,7 +24,7 @@ export function getPhotoBoothJS(): string {
         this.detectedFaces = [];
         this.isDetecting = false;
         this.lastPhotoId = null;
-        this.showFaceBoxes = true;
+        this.showFaceBoxes = false; //default to false
 
         this.accessoryStates = {};
         this.selectedOverlay = null;
@@ -51,7 +51,8 @@ export function getPhotoBoothJS(): string {
         this.textFont = 'Arial';
         this.nextTextId = 1;
         this.currentHaiku = null; // Store current haiku for adding to canvas
-        this.showTrash = true; // Show trash by default for easy deletion
+        this.showTrash = false; // Hide trash by default, show when dragging
+        this.trashMode = 'auto'; // 'auto' (show when dragging), 'always', or 'never'
         this.selectedTextForEdit = null; // Currently selected text for editing
 
         this.init();
@@ -88,7 +89,7 @@ export function getPhotoBoothJS(): string {
             }
           }, 200);
           
-          this.updateStatus('Ready! 🎭 Accessory mode active - select emojis and drag to position. Toggle drawing mode to draw! 😊', 'ready');
+          this.updateStatus('Ready! 🎭 Accessory mode active - select emojis and drag to position. Toggle drawing mode to draw! 🗑️ Trash appears when dragging. 😊', 'ready');
           console.log('Initialization complete!');
         } catch (error) {
           console.error('Initialization error:', error);
@@ -273,27 +274,6 @@ export function getPhotoBoothJS(): string {
         document.getElementById('add-haiku-btn').addEventListener('click', () => {
           this.addHaikuToCanvas();
         });
-
-        // NEW: Toggle trash visibility
-        document.getElementById('toggle-trash-btn').addEventListener('click', () => {
-          this.toggleTrash();
-        });
-
-        // NEW: Force redraw trash for testing - only add if element exists
-        const testTrashBtn = document.getElementById('test-trash-btn');
-        if (testTrashBtn) {
-          testTrashBtn.addEventListener('click', () => {
-            console.log('=== TESTING TRASH CAN ===');
-            console.log('showTrash: ' + this.showTrash);
-            try {
-              this.testDrawTrash();
-            } catch (error) {
-              console.error('Test trash error:', error);
-            }
-          });
-        } else {
-          console.log('Test trash button not found');
-        }
 
         // NEW: Apply text edits
         document.getElementById('apply-edit-btn').addEventListener('click', () => {
@@ -617,6 +597,10 @@ export function getPhotoBoothJS(): string {
         this.currentHaiku = null;
         this.selectedTextForEdit = null;
         this.selectedOverlay = null; // Clear any selected text
+        
+        // Reset trash to default auto mode
+        this.showTrash = false;
+        this.trashMode = 'auto';
         
         // Clear text from accessory states
         for (const faceId in this.accessoryStates) {
@@ -1469,20 +1453,37 @@ export function getPhotoBoothJS(): string {
       // NEW: Toggle trash can visibility
       toggleTrash() {
         try {
-          this.showTrash = !this.showTrash;
-          console.log('Toggled trash to:', this.showTrash);
+          // Cycle through modes: auto -> always -> never -> auto
+          if (this.trashMode === 'auto') {
+            this.trashMode = 'always';
+            this.showTrash = true;
+          } else if (this.trashMode === 'always') {
+            this.trashMode = 'never';
+            this.showTrash = false;
+          } else {
+            this.trashMode = 'auto';
+            this.showTrash = false;
+          }
+          
+          console.log('Toggled trash mode to:', this.trashMode, 'showTrash:', this.showTrash);
           
           const button = document.getElementById('toggle-trash-btn');
           if (button) {
-            button.textContent = this.showTrash ? '🗑️ Hide Trash' : '🗑️ Show Trash';
-            button.classList.toggle('active', this.showTrash);
+            const buttonText = {
+              'auto': '🗑️ Auto Trash',
+              'always': '🗑️ Always Show',
+              'never': '🗑️ Never Show'
+            };
+            button.textContent = buttonText[this.trashMode];
+            button.classList.toggle('active', this.trashMode === 'always');
           }
           
-          if (this.showTrash) {
-            this.updateStatus('🗑️ Trash can should be visible in bottom-right corner!', 'ready');
-          } else {
-            this.updateStatus('Trash can hidden', 'ready');
-          }
+          const statusText = {
+            'auto': '🗑️ Trash will show when dragging elements',
+            'always': '🗑️ Trash can is now always visible!',
+            'never': '🗑️ Trash can is disabled (no deletion possible)'
+          };
+          this.updateStatus(statusText[this.trashMode], 'ready');
           
           // Force redraw
           console.log('Forcing redraw after toggle');
@@ -1559,7 +1560,7 @@ export function getPhotoBoothJS(): string {
 
       // NEW: Check if position is over trash can
       isOverTrash(x, y) {
-        if (!this.showTrash) return false;
+        if (!this.showTrash || this.trashMode === 'never') return false;
         
         const trashX = this.overlayCanvas.width - 90;
         const trashY = this.overlayCanvas.height - 90;
@@ -1575,20 +1576,41 @@ export function getPhotoBoothJS(): string {
         return isOver;
       }
 
-      // NEW: Delete text element
-      deleteTextElement(containerId, elementId) {
+      // NEW: Delete any element (text or accessory)
+      deleteElement(containerId, elementId) {
         if (containerId === 'absolute') {
           // Remove from absolute text overlays
           this.textOverlays = this.textOverlays.filter(overlay => overlay.id !== elementId);
+          this.updateStatus('Text deleted! 🗑️', 'ready');
         } else {
-          // Remove from face-relative text
+          // Handle face-relative elements (both text and accessories)
           if (this.accessoryStates[containerId] && this.accessoryStates[containerId][elementId]) {
-            delete this.accessoryStates[containerId][elementId];
+            if (elementId.startsWith('text_')) {
+              // It's face-relative text
+              delete this.accessoryStates[containerId][elementId];
+              this.updateStatus('Text deleted! 🗑️', 'ready');
+            } else {
+              // It's an emoji accessory (hat, glasses, face, extra)
+              delete this.accessoryStates[containerId][elementId];
+              // Also clear from selected accessories so it doesn't reappear
+              if (this.selectedAccessories[elementId]) {
+                this.selectedAccessories[elementId] = null;
+                // Update UI to show accessory is deselected
+                document.querySelectorAll('[data-type="' + elementId + '"]').forEach(btn => 
+                  btn.classList.remove('selected')
+                );
+              }
+              this.updateStatus('Accessory deleted! 🗑️', 'ready');
+            }
           }
         }
         
-        this.updateStatus('Text deleted! 🗑️', 'ready');
-        this.log('Deleted text element: ' + containerId + '/' + elementId);
+        this.log('Deleted element: ' + containerId + '/' + elementId);
+      }
+
+      // Legacy function - now just calls the general delete function
+      deleteTextElement(containerId, elementId) {
+        this.deleteElement(containerId, elementId);
       }
       
       addHaikuToCanvas() {
@@ -1736,6 +1758,7 @@ export function getPhotoBoothJS(): string {
           extra: null
         };
         this.accessoryStates = {};
+        this.selectedOverlay = null; // Clear any selected overlays
         document.querySelectorAll('.accessory-btn').forEach(btn => 
           btn.classList.remove('selected')
         );
@@ -1876,6 +1899,12 @@ export function getPhotoBoothJS(): string {
           };
           this.dragStart = { offsetX: state.offsetX || 0, offsetY: state.offsetY || 0 };
           
+          // Show trash can when starting to drag (if in auto mode)
+          if (this.trashMode === 'auto' && !this.showTrash) {
+            this.showTrash = true;
+            this.drawOverlays();
+          }
+          
           // Update UI controls if text is selected
           this.updateUIForSelectedText(foundResize.element, foundResize.elementId);
           
@@ -1892,6 +1921,12 @@ export function getPhotoBoothJS(): string {
             offsetX: state.offsetX || (found.containerId === 'absolute' ? state.x : 0), 
             offsetY: state.offsetY || (found.containerId === 'absolute' ? state.y : 0)
           };
+          
+          // Show trash can when starting to drag (if in auto mode)
+          if (this.trashMode === 'auto' && !this.showTrash) {
+            this.showTrash = true;
+            this.drawOverlays();
+          }
           
           // Update UI controls if text is selected
           this.updateUIForSelectedText(found.element, found.elementId);
@@ -2004,13 +2039,17 @@ export function getPhotoBoothJS(): string {
 
       onOverlayPointerUp(e) {
         if (this.isDragging && this.selectedOverlay) {
-          // Check if released over trash
+          // Check if released over trash (but not in 'never' mode)
           const pos = this.getPointerPos(e);
-          if (this.isOverTrash(pos.x, pos.y)) {
+          if (this.trashMode !== 'never' && this.isOverTrash(pos.x, pos.y)) {
             this.deleteTextElement(this.selectedOverlay.containerId, this.selectedOverlay.elementId);
             this.selectedOverlay = null;
             this.isDragging = false;
             this.resizeMode = false;
+            // Hide trash after deletion (if in auto mode)
+            if (this.trashMode === 'auto') {
+              this.showTrash = false;
+            }
             this.drawOverlays();
             return;
           }
@@ -2018,6 +2057,11 @@ export function getPhotoBoothJS(): string {
         
         this.isDragging = false;
         this.resizeMode = false;
+        
+        // Hide trash can when dragging ends (only in auto mode)
+        if (this.trashMode === 'auto' && this.showTrash) {
+          this.showTrash = false;
+        }
         
         // Keep the overlay selected for continued editing
         // Don't clear this.selectedOverlay here so user can continue editing
