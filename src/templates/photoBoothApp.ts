@@ -1,5 +1,5 @@
 // File: src/templates/photoBoothApp.ts
-// Enhanced photo booth template with text overlay system UI
+// Enhanced photo booth template with auto-save and capture confirmation
 
 import { getPhotoBoothCSS } from '../assets/styles';
 import { getPhotoBoothJS } from '../assets/photoBooth';
@@ -474,6 +474,104 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
     .font-btn[data-font="Verdana"] {
       font-family: Verdana, sans-serif;
     }
+
+    /* NEW: Capture Confirmation Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: none;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .capture-confirmation-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.9);
+      background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+      color: white;
+      padding: 30px 40px;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      z-index: 10001;
+      display: none;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .capture-confirmation-modal h2 {
+      margin: 0 0 15px 0;
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    .capture-confirmation-modal p {
+      margin: 0 0 20px 0;
+      font-size: 1.1rem;
+      line-height: 1.4;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-modal {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-modal-primary {
+      background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+      color: white;
+    }
+
+    .btn-modal-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+    }
+
+    .btn-modal-secondary {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-modal-secondary:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .capture-success-icon {
+      font-size: 4rem;
+      margin-bottom: 15px;
+      animation: bounceIn 0.6s ease;
+    }
+
+    @keyframes bounceIn {
+      0% { transform: scale(0.3); opacity: 0; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
     .haiku-container {
       display: none;
       margin: 20px 0;
@@ -553,6 +651,117 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
     .btn-haiku:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
+    }
+
+    /* Text Edit Panel Styles */
+    .text-edit-panel {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      border: 2px solid #ff9800;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      max-width: 400px;
+      width: 90%;
+    }
+
+    .edit-panel-header {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #ff9800;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .edit-form-group {
+      margin-bottom: 15px;
+    }
+
+    .edit-form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .edit-text-input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ff9800;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    .edit-color-input {
+      width: 100%;
+      height: 40px;
+      border: 2px solid #ff9800;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .edit-font-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .edit-font-btn {
+      padding: 8px 12px;
+      border: 2px solid #ff9800;
+      border-radius: 6px;
+      background: white;
+      color: #ff9800;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .edit-font-btn:hover {
+      background: rgba(255, 152, 0, 0.1);
+    }
+
+    .edit-font-btn.selected {
+      background: #ff9800;
+      color: white;
+    }
+
+    .edit-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .btn-edit {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .btn-edit-apply {
+      background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+      color: white;
+    }
+
+    .btn-edit-cancel {
+      background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
+      color: white;
+    }
+
+    .btn-edit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
   </style>
 </head>
@@ -730,7 +939,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         <button class="btn btn-warning" id="clear-text-btn">📝 Clear Text</button>
         <button class="btn btn-warning" id="clear-all-btn">🧹 Clear Everything</button>
         <button class="btn btn-secondary" id="download-btn" style="display: none;">💾 Download</button>
-        <button class="btn btn-success" id="upload-btn" style="display: none;">☁️ Save to Cloudflare R2</button>
+        <button class="btn btn-success" id="upload-btn" style="display: none;">☁️ Manual Save</button>
         <button class="btn btn-ai" id="haiku-btn" style="display: none; background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%); color: white;">🤖 Generate AI Haiku</button>
         <button class="btn btn-success" id="share-btn" style="display: none;">🔗 Share Photo</button>
         <button class="btn btn-secondary" id="gallery-btn">🖼️ View Gallery</button>
@@ -822,6 +1031,18 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
       <div class="edit-actions">
         <button class="btn-edit btn-edit-apply" id="apply-edit-btn">✅ Apply</button>
         <button class="btn-edit btn-edit-cancel" id="cancel-edit-btn">❌ Cancel</button>
+      </div>
+    </div>
+
+    <!-- NEW: Capture Confirmation Modal -->
+    <div class="modal-overlay" id="modal-overlay"></div>
+    <div class="capture-confirmation-modal" id="capture-confirmation-modal">
+      <div class="capture-success-icon">📸✨</div>
+      <h2>Photo Captured!</h2>
+      <p>Your photo has been captured and is being auto-saved to the cloud.</p>
+      <div class="modal-buttons">
+        <button class="btn-modal btn-modal-primary" id="view-last-photo-btn">📷 View Photo</button>
+        <button class="btn-modal btn-modal-secondary" id="close-confirmation-btn">✖️ Close</button>
       </div>
     </div>
     

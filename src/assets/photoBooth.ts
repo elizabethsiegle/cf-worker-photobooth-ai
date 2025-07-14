@@ -1,5 +1,5 @@
 // File: src/assets/photoBooth.ts
-// Enhanced photo booth with text overlay system supporting absolute and face-relative positioning
+// Enhanced photo booth with auto-save and capture confirmation
 
 export function getPhotoBoothJS(): string {
   return `
@@ -55,11 +55,55 @@ export function getPhotoBoothJS(): string {
         this.trashMode = 'auto'; // 'auto' (show when dragging), 'always', or 'never'
         this.selectedTextForEdit = null; // Currently selected text for editing
 
+        // NEW: Auto-save and confirmation
+        this.autoSave = true; // Enable auto-save by default
+        this.isUploading = false; // Track upload state
+
         this.init();
       }
 
       log(message) {
         console.log(message);
+      }
+
+      // NEW: Show capture confirmation modal
+      showCaptureConfirmation() {
+        const modal = document.getElementById('capture-confirmation-modal');
+        const overlay = document.getElementById('modal-overlay');
+        
+        if (modal && overlay) {
+          overlay.style.display = 'block';
+          modal.style.display = 'block';
+          
+          // Animate in
+          setTimeout(() => {
+            overlay.style.opacity = '1';
+            modal.style.opacity = '1';
+            modal.style.transform = 'translate(-50%, -50%) scale(1)';
+          }, 10);
+          
+          // Auto-hide after 3 seconds
+          setTimeout(() => {
+            this.hideCaptureConfirmation();
+          }, 3000);
+        }
+      }
+
+      // NEW: Hide capture confirmation modal
+      hideCaptureConfirmation() {
+        const modal = document.getElementById('capture-confirmation-modal');
+        const overlay = document.getElementById('modal-overlay');
+        
+        if (modal && overlay) {
+          modal.style.opacity = '0';
+          modal.style.transform = 'translate(-50%, -50%) scale(0.9)';
+          overlay.style.opacity = '0';
+          
+          setTimeout(() => {
+            modal.style.display = 'none';
+            overlay.style.display = 'none';
+          }, 300);
+        }
       }
 
       async init() {
@@ -157,6 +201,17 @@ export function getPhotoBoothJS(): string {
       setupEventListeners() {
         this.log('Setting up event listeners...');
         
+        // NEW: Modal close button
+        document.getElementById('close-confirmation-btn')?.addEventListener('click', () => {
+          this.hideCaptureConfirmation();
+        });
+
+        // NEW: View last photo button
+        document.getElementById('view-last-photo-btn')?.addEventListener('click', () => {
+          this.hideCaptureConfirmation();
+          this.scrollToPhoto();
+        });
+
         document.getElementById('show-face-boxes').addEventListener('change', (e) => {
           this.showFaceBoxes = e.target.checked;
           this.log('Face boxes toggle: ' + this.showFaceBoxes);
@@ -346,7 +401,7 @@ export function getPhotoBoothJS(): string {
         });
         
         document.getElementById('upload-btn').addEventListener('click', () => {
-          this.log('Upload button clicked');
+          this.log('Manual upload button clicked');
           this.uploadPhoto();
         });
         
@@ -396,6 +451,17 @@ export function getPhotoBoothJS(): string {
         this.drawingCanvas.addEventListener('touchend', this.onDrawingEnd.bind(this));
         
         this.log('Event listeners setup complete');
+      }
+
+      // NEW: Scroll to captured photo
+      scrollToPhoto() {
+        const photoContainer = document.getElementById('captured-photo-container');
+        if (photoContainer) {
+          photoContainer.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+        }
       }
 
       updateBrushPreview() {
@@ -1220,8 +1286,11 @@ export function getPhotoBoothJS(): string {
         this.log('Drawing cleared');
       }
 
-      capturePhoto() {
+      // UPDATED: Capture photo with auto-save and confirmation
+      async capturePhoto() {
         this.log('Capturing photo...');
+        this.updateStatus('📸 Capturing photo...', 'loading');
+        
         const canvas = this.capturedCanvas;
         const ctx = this.capturedCtx;
         const container = document.getElementById('captured-photo-container');
@@ -1262,9 +1331,23 @@ export function getPhotoBoothJS(): string {
           return count + Object.keys(face).filter(key => key.startsWith('text_')).length;
         }, 0);
         
-        this.updateStatus('Photo captured with ' + (this.selectedFilter === 'none' ? 'no filter' : this.selectedFilter + ' filter') + 
-                         (textCount > 0 ? ' and ' + textCount + ' text element(s)' : '') + '! 📸 Upload to cloud to share it!', 'ready');
+        // Show capture confirmation immediately
+        this.showCaptureConfirmation();
+        
+        this.updateStatus('📸 Photo captured! Auto-saving to cloud...', 'loading');
         this.log('Photo captured successfully with filter: ' + this.selectedFilter + ', text elements: ' + textCount);
+        
+        // Auto-save if enabled and not already uploading
+        if (this.autoSave && !this.isUploading) {
+          try {
+            await this.uploadPhoto();
+          } catch (error) {
+            console.error('Auto-upload failed:', error);
+            this.updateStatus('📸 Photo captured! Auto-save failed - use "Save to Cloud" button to try again. 💾', 'error');
+          }
+        } else {
+          this.updateStatus('📸 Photo captured! Click "Save to Cloud" to upload. 💾', 'ready');
+        }
       }
 
       getFilterCSS(filterType) {
@@ -1289,8 +1372,15 @@ export function getPhotoBoothJS(): string {
         this.log('Photo download initiated');
       }
 
+      // UPDATED: Upload photo with upload state tracking
       async uploadPhoto() {
+        if (this.isUploading) {
+          this.log('Upload already in progress, skipping');
+          return;
+        }
+
         try {
+          this.isUploading = true;
           this.log('Starting photo upload...');
           this.updateStatus('Uploading to cloud... ☁️', 'loading');
           
@@ -1330,13 +1420,15 @@ export function getPhotoBoothJS(): string {
           this.lastPhotoId = result.photoId;
           
           document.getElementById('share-btn').style.display = 'block';
-          this.updateStatus('Photo uploaded successfully! ✅ Creative filename: ' + result.filename, 'ready');
+          this.updateStatus('✅ Photo saved to cloud! Creative filename: ' + result.filename, 'ready');
           this.loadGallery();
           
         } catch (error) {
           console.error('Upload error:', error);
           this.log('Upload error: ' + error.message);
           this.updateStatus('Upload failed ❌: ' + error.message, 'error');
+        } finally {
+          this.isUploading = false;
         }
       }
 

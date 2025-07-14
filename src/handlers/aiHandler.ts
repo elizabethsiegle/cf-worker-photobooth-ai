@@ -311,40 +311,40 @@ export async function parseTextCommand(
       {
         role: "system",
         content: `You are a text command parser for a photo booth app. Parse user commands and extract:
-1. content: The actual text/emoji to display
-2. position: "face-relative" or "absolute" 
-3. targetFace: 0-based index if targeting specific person (0=first, 1=second, etc.) or null
-4. offsetX, offsetY: positioning offset in pixels
-5. positionDescription: human-readable position description
-6. fontFamily: font name if specified
-7. color: hex color if specified
-8. fontSize: size in pixels if specified
+            1. content: The actual text/emoji to display
+            2. position: "face-relative" or "absolute" 
+            3. targetFace: 0-based index if targeting specific person (0=first, 1=second, etc.) or null
+            4. offsetX, offsetY: positioning offset in pixels
+            5. positionDescription: human-readable position description
+            6. fontFamily: font name if specified
+            7. color: hex color if specified
+            8. fontSize: size in pixels if specified
 
-Position mappings:
-- "top of/above/over head/face" → offsetX: 0, offsetY: -80
-- "left of head/face" → offsetX: -80, offsetY: 0  
-- "right of head/face" → offsetX: 80, offsetY: 0
-- "below/under/bottom of head/face" → offsetX: 0, offsetY: 60
-- "on head/face" → offsetX: 0, offsetY: 0
+            Position mappings:
+            - "top of/above/over head/face" → offsetX: 0, offsetY: -80
+            - "left of head/face" → offsetX: -80, offsetY: 0  
+            - "right of head/face" → offsetX: 80, offsetY: 0
+            - "below/under/bottom of head/face" → offsetX: 0, offsetY: 60
+            - "on head/face" → offsetX: 0, offsetY: 0
 
-Font mappings:
-- "comic sans" → "Comic Sans MS"
-- "arial" → "Arial"
-- "times" → "Times New Roman"
-- "courier" → "Courier New"
-- "georgia" → "Georgia"
-- "verdana" → "Verdana"
+            Font mappings:
+            - "comic sans" → "Comic Sans MS"
+            - "arial" → "Arial"
+            - "times" → "Times New Roman"
+            - "courier" → "Courier New"
+            - "georgia" → "Georgia"
+            - "verdana" → "Verdana"
 
-Respond with valid JSON only. Examples:
+            Respond with valid JSON only. Examples:
 
-Input: "write 'hello' in comic sans on top of my head"
-Output: {"content":"hello","position":"face-relative","targetFace":0,"offsetX":0,"offsetY":-80,"positionDescription":"above","fontFamily":"Comic Sans MS"}
+            Input: "write 'hello' in comic sans on top of my head"
+            Output: {"content":"hello","position":"face-relative","targetFace":0,"offsetX":0,"offsetY":-80,"positionDescription":"above","fontFamily":"Comic Sans MS"}
 
-Input: "put 🔥 left of the 2nd person"  
-Output: {"content":"🔥","position":"face-relative","targetFace":1,"offsetX":-80,"offsetY":0,"positionDescription":"left of"}
+            Input: "put 🔥 left of the 2nd person"  
+            Output: {"content":"🔥","position":"face-relative","targetFace":1,"offsetX":-80,"offsetY":0,"positionDescription":"left of"}
 
-Input: "add COOL text"
-Output: {"content":"COOL text","position":"absolute","targetFace":null}`
+            Input: "add COOL text"
+            Output: {"content":"COOL text","position":"absolute","targetFace":null}`
       },
       {
         role: "user",
