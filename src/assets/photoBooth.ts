@@ -195,8 +195,22 @@ export function getPhotoBoothJS(): string {
           btn.addEventListener('click', (e) => {
             document.querySelectorAll('.text-color-btn').forEach(b => b.classList.remove('selected'));
             e.target.classList.add('selected');
-            this.textColor = e.target.dataset.color;
+            const newColor = e.target.dataset.color;
+            this.textColor = newColor;
             this.updateTextPreview();
+            
+            // Update selected text overlay color if one is selected
+            if (this.selectedOverlay && this.selectedOverlay.element) {
+              const element = this.selectedOverlay.element;
+              // Check if it's a text element (either absolute text or face-relative text)
+              if (element.content || this.selectedOverlay.elementId.startsWith('text_')) {
+                element.color = newColor;
+                this.drawOverlays(); // Redraw to show the color change
+                this.updateStatus('Text color updated to ' + newColor + '! 🎨', 'ready');
+                this.log('Updated selected text color to: ' + newColor);
+              }
+            }
+            
             this.log('Selected text color: ' + this.textColor);
           });
         });
@@ -208,8 +222,21 @@ export function getPhotoBoothJS(): string {
 
         // NEW: Text size slider
         document.getElementById('text-size').addEventListener('input', (e) => {
-          this.textSize = parseInt(e.target.value);
+          const newSize = parseInt(e.target.value);
+          this.textSize = newSize;
           this.updateTextPreview();
+          
+          // Update selected text overlay size if one is selected
+          if (this.selectedOverlay && this.selectedOverlay.element) {
+            const element = this.selectedOverlay.element;
+            // Check if it's a text element (either absolute text or face-relative text)
+            if (element.content || this.selectedOverlay.elementId.startsWith('text_')) {
+              element.fontSize = newSize;
+              this.drawOverlays(); // Redraw to show the size change
+              this.updateStatus('Text size updated to ' + newSize + 'px! 📏', 'ready');
+              this.log('Updated selected text size to: ' + newSize);
+            }
+          }
         });
 
         // NEW: Font selection
@@ -217,8 +244,22 @@ export function getPhotoBoothJS(): string {
           btn.addEventListener('click', (e) => {
             document.querySelectorAll('.font-btn').forEach(b => b.classList.remove('selected'));
             e.target.classList.add('selected');
-            this.textFont = e.target.dataset.font;
+            const newFont = e.target.dataset.font;
+            this.textFont = newFont;
             this.updateTextPreview();
+            
+            // Update selected text overlay font if one is selected
+            if (this.selectedOverlay && this.selectedOverlay.element) {
+              const element = this.selectedOverlay.element;
+              // Check if it's a text element (either absolute text or face-relative text)
+              if (element.content || this.selectedOverlay.elementId.startsWith('text_')) {
+                element.fontFamily = newFont;
+                this.drawOverlays(); // Redraw to show the font change
+                this.updateStatus('Text font updated to ' + newFont + '! ✍️', 'ready');
+                this.log('Updated selected text font to: ' + newFont);
+              }
+            }
+            
             this.log('Selected font: ' + this.textFont);
           });
         });
@@ -575,6 +616,7 @@ export function getPhotoBoothJS(): string {
         this.textOverlays = [];
         this.currentHaiku = null;
         this.selectedTextForEdit = null;
+        this.selectedOverlay = null; // Clear any selected text
         
         // Clear text from accessory states
         for (const faceId in this.accessoryStates) {
@@ -822,6 +864,74 @@ export function getPhotoBoothJS(): string {
           
         } catch (error) {
           console.error('Error in drawOverlays:', error);
+        }
+      }
+
+      // NEW: Draw trash can in bottom-right corner
+      drawTrashCan() {
+        try {
+          if (!this.overlayCtx) {
+            console.error('No overlay context for trash can');
+            return;
+          }
+
+          const trashX = this.overlayCanvas.width - 90;
+          const trashY = this.overlayCanvas.height - 90;
+          const trashSize = 70;
+          
+          console.log('Drawing trash can at:', trashX, trashY, 'size:', trashSize);
+          
+          const ctx = this.overlayCtx;
+          
+          // Draw trash can background circle
+          ctx.save();
+          ctx.fillStyle = 'rgba(244, 67, 54, 0.8)'; // Semi-transparent red
+          ctx.strokeStyle = '#fff';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(trashX + trashSize/2, trashY + trashSize/2, trashSize/2 - 5, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.stroke();
+          
+          // Draw trash can emoji
+          ctx.font = '32px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillStyle = '#fff';
+          ctx.fillText('🗑️', trashX + trashSize/2, trashY + trashSize/2);
+          
+          // Add "DELETE" text below
+          ctx.font = '12px Arial';
+          ctx.fillStyle = '#fff';
+          ctx.fillText('DELETE', trashX + trashSize/2, trashY + trashSize + 15);
+          
+          ctx.restore();
+          
+          console.log('Trash can drawn successfully');
+          
+        } catch (error) {
+          console.error('Error drawing trash can:', error);
+        }
+      }
+
+      // NEW: Test trash drawing (for debugging)
+      testDrawTrash() {
+        console.log('=== TESTING TRASH CAN DRAWING ===');
+        console.log('showTrash:', this.showTrash);
+        console.log('overlayCanvas:', this.overlayCanvas);
+        console.log('overlayCtx:', this.overlayCtx);
+        console.log('Canvas dimensions:', this.overlayCanvas?.width, 'x', this.overlayCanvas?.height);
+        
+        try {
+          // Force clear and redraw
+          this.overlayCtx.clearRect(0, 0, this.overlayCanvas.width, this.overlayCanvas.height);
+          
+          // Draw just the trash can for testing
+          this.drawTrashCan();
+          
+          console.log('Test trash drawing completed');
+        } catch (error) {
+          console.error('Test trash drawing error:', error);
         }
       }
 
@@ -1320,6 +1430,42 @@ export function getPhotoBoothJS(): string {
         }
       }
 
+      // NEW: Update UI controls to reflect selected text properties
+      updateUIForSelectedText(element, elementId) {
+        // Only update UI for text elements
+        if (!element.content && !elementId.startsWith('text_')) return;
+        
+        const textColor = element.color || this.textColor;
+        const textSize = element.fontSize || this.textSize;
+        const textFont = element.fontFamily || this.textFont;
+        
+        // Update color button selection
+        document.querySelectorAll('.text-color-btn').forEach(btn => {
+          btn.classList.toggle('selected', btn.dataset.color === textColor);
+        });
+        
+        // Update text size slider
+        const textSizeSlider = document.getElementById('text-size');
+        if (textSizeSlider) {
+          textSizeSlider.value = textSize;
+        }
+        
+        // Update font button selection
+        document.querySelectorAll('.font-btn').forEach(btn => {
+          btn.classList.toggle('selected', btn.dataset.font === textFont);
+        });
+        
+        // Update the global text properties to match selected text
+        this.textColor = textColor;
+        this.textSize = textSize;
+        this.textFont = textFont;
+        
+        // Update text preview
+        this.updateTextPreview();
+        
+        this.log('Updated UI controls for selected text: color=' + textColor + ', size=' + textSize + ', font=' + textFont);
+      }
+
       // NEW: Toggle trash can visibility
       toggleTrash() {
         try {
@@ -1444,6 +1590,7 @@ export function getPhotoBoothJS(): string {
         this.updateStatus('Text deleted! 🗑️', 'ready');
         this.log('Deleted text element: ' + containerId + '/' + elementId);
       }
+      
       addHaikuToCanvas() {
         if (!this.currentHaiku) {
           this.updateStatus('No haiku available to add! Generate a haiku first. 🎌', 'error');
@@ -1640,7 +1787,7 @@ export function getPhotoBoothJS(): string {
         }
       }
 
-      // Updated to handle text elements
+      // Updated to handle text elements and update UI controls
       onOverlayPointerDown(e) {
         const pos = this.getPointerPos(e);
         let found = null;
@@ -1728,6 +1875,10 @@ export function getPhotoBoothJS(): string {
             startDist: Math.sqrt(dx * dx + dy * dy)
           };
           this.dragStart = { offsetX: state.offsetX || 0, offsetY: state.offsetY || 0 };
+          
+          // Update UI controls if text is selected
+          this.updateUIForSelectedText(foundResize.element, foundResize.elementId);
+          
           e.preventDefault();
           return;
         }
@@ -1741,7 +1892,15 @@ export function getPhotoBoothJS(): string {
             offsetX: state.offsetX || (found.containerId === 'absolute' ? state.x : 0), 
             offsetY: state.offsetY || (found.containerId === 'absolute' ? state.y : 0)
           };
+          
+          // Update UI controls if text is selected
+          this.updateUIForSelectedText(found.element, found.elementId);
+          
           e.preventDefault();
+        } else {
+          // Clicked on empty area - clear selection
+          this.selectedOverlay = null;
+          this.drawOverlays();
         }
       }
 
@@ -1859,7 +2018,10 @@ export function getPhotoBoothJS(): string {
         
         this.isDragging = false;
         this.resizeMode = false;
-        this.selectedOverlay = null;
+        
+        // Keep the overlay selected for continued editing
+        // Don't clear this.selectedOverlay here so user can continue editing
+        
         this.drawOverlays();
       }
 
