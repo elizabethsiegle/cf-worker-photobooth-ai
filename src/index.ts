@@ -1,5 +1,5 @@
 // File: src/index.ts
-// Enhanced Worker entry point with AI text command parsing endpoint
+// Enhanced Worker entry point with AI text command parsing endpoint and photo deletion
 
 import { handleUpload } from './handlers/uploadHandler';
 import { handleGallery } from './handlers/galleryHandler';
@@ -7,6 +7,7 @@ import { handleCreateShare, handleSharePage } from './handlers/shareHandler';
 import { handleAnalytics } from './handlers/analyticsHandler';
 import { handleHaikuRequest, getHaikuForPhoto, handleFilterInterpretation, handleTextCommandParsing } from './handlers/aiHandler';
 import { handlePhoto } from './handlers/photoHandler';
+import { handleDeletePhoto } from './handlers/deleteHandler';
 import { servePhotoBoothApp } from './templates/photoBoothApp';
 import { CORS_HEADERS } from './utils/constants';
 
@@ -54,6 +55,11 @@ export default {
           return handlePhoto(pathname, env, CORS_HEADERS);
         }
 
+        // NEW: Photo deletion (DELETE method)
+        if (pathname.startsWith('/api/delete-photo/') && method === 'DELETE') {
+          return handleDeletePhoto(pathname, env, CORS_HEADERS);
+        }
+
         // Share creation
         if (pathname === '/api/share' && method === 'POST') {
           return handleCreateShare(request, env, CORS_HEADERS);
@@ -80,7 +86,7 @@ export default {
           return handleFilterInterpretation(request, env, CORS_HEADERS);
         }
 
-        // NEW: AI text command parsing
+        // AI text command parsing
         if (pathname === '/api/parse-text-command' && method === 'POST') {
           return handleTextCommandParsing(request, env, CORS_HEADERS);
         }

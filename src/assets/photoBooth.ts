@@ -170,7 +170,6 @@ export function getPhotoBoothJS(): string {
 
       async setupFaceDetection() {
         try {
-          this.log('Setting up face detection...');
           const filesetResolver = await window.mpVision.FilesetResolver.forVisionTasks(
             'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm'
           );
@@ -201,12 +200,12 @@ export function getPhotoBoothJS(): string {
       setupEventListeners() {
         this.log('Setting up event listeners...');
         
-        // NEW: Modal close button
+        // Modal close button
         document.getElementById('close-confirmation-btn')?.addEventListener('click', () => {
           this.hideCaptureConfirmation();
         });
 
-        // NEW: View last photo button
+        // View last photo button
         document.getElementById('view-last-photo-btn')?.addEventListener('click', () => {
           this.hideCaptureConfirmation();
           this.scrollToPhoto();
@@ -470,7 +469,7 @@ export function getPhotoBoothJS(): string {
         preview.style.setProperty('--brush-size', this.brushSize + 'px');
       }
 
-      // NEW: Update text preview
+      // Update text preview
       updateTextPreview() {
         const preview = document.getElementById('text-preview');
         preview.style.color = this.textColor;
@@ -479,7 +478,7 @@ export function getPhotoBoothJS(): string {
         preview.textContent = document.getElementById('text-input').value || 'Sample Text';
       }
 
-      // NEW: AI-powered text parsing using LLM
+      // AI-powered text parsing using LLM
       async parseTextInputWithAI(text) {
         try {
           this.log('Parsing text with AI: ' + text);
@@ -539,7 +538,7 @@ export function getPhotoBoothJS(): string {
         return result;
       }
 
-      // NEW: Add text overlay
+      // Add text overlay
       async addTextOverlay() {
         const textInput = document.getElementById('text-input');
         const rawText = textInput.value.trim();
@@ -565,7 +564,7 @@ export function getPhotoBoothJS(): string {
         this.updateTextPreview();
       }
 
-      // NEW: Add face-relative text (like accessories)
+      // Add face-relative text (like accessories)
       addFaceRelativeText(parsed) {
         const targetFaceIndex = parsed.targetFace !== null ? parsed.targetFace : 0;
         
@@ -637,7 +636,7 @@ export function getPhotoBoothJS(): string {
         this.log('Added face-relative text: ' + parsed.content + ' ' + positionDescription + ' face ' + (targetFaceIndex + 1));
       }
 
-      // NEW: Add absolute positioned text
+      // Add absolute positioned text
       addAbsoluteText(parsed) {
         const textOverlay = {
           id: this.nextTextId++,
@@ -657,7 +656,7 @@ export function getPhotoBoothJS(): string {
         this.log('Added absolute text: ' + parsed.content);
       }
 
-      // NEW: Clear all text overlays
+      // Clear all text overlays
       clearText() {
         this.textOverlays = [];
         this.currentHaiku = null;

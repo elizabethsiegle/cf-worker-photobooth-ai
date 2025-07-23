@@ -1,5 +1,5 @@
 // File: src/templates/photoBoothApp.ts
-// Enhanced photo booth template with auto-save and capture confirmation
+// Enhanced photo booth template with Models & Mules event theme and Twitter sharing
 
 import { getPhotoBoothCSS } from '../assets/styles';
 import { getPhotoBoothJS } from '../assets/photoBooth';
@@ -10,7 +10,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Face Detection Photo Booth with Drawing, Text & AI</title>
+  <title>Models & Mules Photo Booth 🐴🍹</title>
   <script type="module">
     import * as mpVision from 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs';
     window.mpVision = mpVision;
@@ -18,755 +18,217 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
   <style>
     ${getPhotoBoothCSS()}
     
-    /* Enhanced Filter Button Styles */
-    .filter-section {
-      margin: 15px 0;
-      padding: 15px;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-      border-radius: 12px;
-      border: 1px solid #dee2e6;
-    }
-    
-    .filter-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-      gap: 8px;
-      margin-top: 10px;
-    }
-    
-    .filter-btn {
-      position: relative;
-      padding: 8px 12px;
-      border: 2px solid #dee2e6;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-      color: #495057;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      overflow: hidden;
-    }
-    
-    .filter-btn::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
-      transition: left 0.5s ease;
-    }
-    
-    .filter-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      border-color: #6c757d;
-    }
-    
-    .filter-btn:hover::before {
-      left: 100%;
-    }
-    
-    .filter-btn.selected {
-      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    /* Models & Mules Event Styling */
+    .event-header {
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 50%, #87ceeb 100%);
       color: white;
-      border-color: #0056b3;
-      box-shadow: 0 4px 12px rgba(0,123,255,0.3);
-      transform: translateY(-1px);
+      text-align: center;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.1);
     }
     
-    .filter-btn.selected::after {
-      content: '✓';
-      position: absolute;
-      top: 2px;
-      right: 4px;
-      font-size: 0.7rem;
-      color: #fff;
+    .event-title {
+      font-size: 2.5rem;
       font-weight: bold;
-    }
-    
-    /* Individual filter button colors for visual distinction */
-    .filter-btn[data-filter="sepia"] {
-      background: linear-gradient(135deg, #d4a574 0%, #b8956a 100%);
-      color: #fff;
-    }
-    
-    .filter-btn[data-filter="sepia"]:not(.selected):hover {
-      background: linear-gradient(135deg, #e0b285 0%, #c4a176 100%);
-    }
-    
-    .filter-btn[data-filter="grayscale"] {
-      background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-      color: #fff;
-    }
-    
-    .filter-btn[data-filter="grayscale"]:not(.selected):hover {
-      background: linear-gradient(135deg, #78848e 0%, #545b62 100%);
-    }
-    
-    .filter-btn[data-filter="vintage"] {
-      background: linear-gradient(135deg, #8b4513 0%, #654321 100%);
-      color: #fff;
-    }
-    
-    .filter-btn[data-filter="vintage"]:not(.selected):hover {
-      background: linear-gradient(135deg, #9c5424 0%, #703b26 100%);
-    }
-    
-    .filter-btn[data-filter="warm"] {
-      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-      color: #fff;
-    }
-    
-    .filter-btn[data-filter="warm"]:not(.selected):hover {
-      background: linear-gradient(135deg, #ff7846 0%, #f89d35 100%);
-    }
-    
-    .filter-btn[data-filter="cool"] {
-      background: linear-gradient(135deg, #4dabf7 0%, #228be6 100%);
-      color: #fff;
-    }
-    
-    .filter-btn[data-filter="cool"]:not(.selected):hover {
-      background: linear-gradient(135deg, #74c0fc 0%, #339af0 100%);
-    }
-    
-    .filter-btn[data-filter="dramatic"] {
-      background: linear-gradient(135deg, #495057 0%, #212529 100%);
-      color: #fff;
-    }
-    
-    .filter-btn[data-filter="dramatic"]:not(.selected):hover {
-      background: linear-gradient(135deg, #5a6268 0%, #343a40 100%);
-    }
-    
-    .filter-btn[data-filter="dreamy"] {
-      background: linear-gradient(135deg, #e056fd 0%, #9c88ff 100%);
-      color: #fff;
-    }
-    
-    .filter-btn[data-filter="dreamy"]:not(.selected):hover {
-      background: linear-gradient(135deg, #e571fe 0%, #a99eff 100%);
-    }
-    
-    /* CSS filter classes for captured photos */
-    .filter-none {
-      filter: none !important;
-    }
-    
-    .filter-sepia {
-      filter: sepia(1) contrast(1.15) brightness(1.1) saturate(1.2) !important;
-    }
-    
-    .filter-grayscale {
-      filter: grayscale(1) contrast(1.2) brightness(1.05) !important;
-    }
-    
-    .filter-vintage {
-      filter: sepia(0.6) contrast(1.3) brightness(1.15) hue-rotate(-15deg) saturate(1.4) !important;
-    }
-    
-    .filter-warm {
-      filter: hue-rotate(-20deg) saturate(1.4) brightness(1.15) contrast(1.1) !important;
-    }
-    
-    .filter-cool {
-      filter: hue-rotate(20deg) saturate(1.3) brightness(1.08) contrast(1.15) !important;
-    }
-    
-    .filter-dramatic {
-      filter: contrast(1.6) brightness(0.95) saturate(1.4) !important;
-    }
-    
-    .filter-dreamy {
-      filter: blur(0.8px) brightness(1.25) saturate(0.85) contrast(0.9) hue-rotate(5deg) !important;
-    }
-    
-    /* AI Filter Description Styles */
-    .ai-filter-section {
-      margin-bottom: 15px;
-      padding: 15px;
-      background: linear-gradient(135deg, rgba(156, 39, 176, 0.05), rgba(103, 58, 183, 0.05));
-      border-radius: 12px;
-      border: 2px solid rgba(156, 39, 176, 0.2);
-    }
-    
-    .filter-description-container {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-    
-    .filter-description-input {
-      flex: 1;
-      padding: 12px 15px;
-      border: 2px solid rgba(156, 39, 176, 0.3);
-      border-radius: 8px;
-      font-size: 0.9rem;
-      background: rgba(255, 255, 255, 0.9);
-      transition: all 0.3s ease;
-    }
-    
-    .filter-description-input:focus {
-      outline: none;
-      border-color: #9c27b0;
-      box-shadow: 0 0 0 3px rgba(156, 39, 176, 0.1);
-    }
-    
-    .filter-description-input::placeholder {
-      color: #888;
-      font-style: italic;
-    }
-    
-    .btn-ai-filter {
-      padding: 12px 20px;
-      background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      white-space: nowrap;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .btn-ai-filter:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(156, 39, 176, 0.3);
-    }
-    
-    .btn-ai-filter:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-    
-    .filter-interpretation {
-      margin-top: 10px;
-      padding: 10px;
-      background: rgba(156, 39, 176, 0.1);
-      border-radius: 6px;
-      font-size: 0.85rem;
-      color: #673ab7;
-      font-weight: 500;
-    }
-    
-    /* NEW: Text Overlay Styles */
-    .text-panel {
-      margin: 15px 0;
-      padding: 15px;
-      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-      border-radius: 12px;
-      border: 2px solid #ff9800;
-    }
-    
-    .text-input-section {
-      margin-bottom: 15px;
-    }
-    
-    .text-input-container {
-      display: flex;
-      gap: 10px;
-      align-items: center;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
       margin-bottom: 10px;
     }
     
-    .text-input {
-      flex: 1;
-      padding: 12px 15px;
-      border: 2px solid #ff9800;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      background: rgba(255, 255, 255, 0.9);
-      transition: all 0.3s ease;
+    .event-subtitle {
+      font-size: 1.2rem;
+      opacity: 0.9;
     }
     
-    .text-input:focus {
-      outline: none;
-      border-color: #f57c00;
-      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
-    }
-    
-    .text-input::placeholder {
-      color: #888;
-      font-style: italic;
-    }
-    
-    .btn-add-text {
-      padding: 12px 20px;
-      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      white-space: nowrap;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .btn-add-text:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
-    }
-    
-    .text-instructions {
-      font-size: 0.8rem;
-      color: #e65100;
-      margin-bottom: 10px;
-      padding: 8px;
-      background: rgba(255, 152, 0, 0.1);
-      border-radius: 6px;
-      line-height: 1.4;
-    }
-    
-    .text-color-palette {
-      display: flex;
-      gap: 8px;
-      margin: 10px 0;
-      flex-wrap: wrap;
-    }
-    
-    .text-color-btn {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      border: 3px solid #ddd;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    .text-color-btn:hover {
-      transform: scale(1.1);
-      border-color: #ff9800;
-    }
-    
-    .text-color-btn.selected {
-      border-color: #ff9800;
-      border-width: 4px;
-      transform: scale(1.1);
-      box-shadow: 0 3px 8px rgba(255, 152, 0, 0.3);
-    }
-    
-    .text-size-container {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin: 10px 0;
-    }
-    
-    .text-size-slider {
-      flex: 1;
-      height: 6px;
-      border-radius: 3px;
-      background: linear-gradient(90deg, #ffcc80 0%, #ff9800 100%);
-      outline: none;
-      cursor: pointer;
-    }
-    
-    .text-size-slider::-webkit-slider-thumb {
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #ff9800;
-      cursor: pointer;
-      border: 2px solid white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    
-    .text-size-slider::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #ff9800;
-      cursor: pointer;
-      border: 2px solid white;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    }
-    
-    .text-preview {
-      font-family: Arial, sans-serif;
-      color: #ffffff;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-      padding: 8px;
-      background: rgba(0,0,0,0.1);
-      border-radius: 6px;
-      text-align: center;
-      margin: 8px 0;
-      border: 1px dashed #ff9800;
-      min-height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    /* NEW: Font Selection Styles */
-    .font-selection {
-      margin: 10px 0;
-    }
-    
-    .font-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 8px;
-      margin-top: 8px;
-    }
-    
-    .font-btn {
-      padding: 8px 12px;
-      border: 2px solid #ff9800;
-      border-radius: 6px;
-      background: rgba(255, 255, 255, 0.9);
-      color: #e65100;
-      font-size: 0.85rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    .font-btn:hover {
-      background: rgba(255, 152, 0, 0.1);
-      transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
-    }
-    
-    .font-btn.selected {
-      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-      color: white;
-      border-color: #f57c00;
-      box-shadow: 0 3px 10px rgba(255, 152, 0, 0.3);
-    }
-    
-    .font-btn[data-font="Arial"] {
-      font-family: Arial, sans-serif;
-    }
-    
-    .font-btn[data-font="Comic Sans MS"] {
-      font-family: "Comic Sans MS", cursive, sans-serif;
-    }
-    
-    .font-btn[data-font="Times New Roman"] {
-      font-family: "Times New Roman", serif;
-    }
-    
-    .font-btn[data-font="Courier New"] {
-      font-family: "Courier New", monospace;
-    }
-    
-    .font-btn[data-font="Georgia"] {
-      font-family: Georgia, serif;
-    }
-    
-    .font-btn[data-font="Verdana"] {
-      font-family: Verdana, sans-serif;
-    }
-
-    /* NEW: Capture Confirmation Modal Styles */
-    .modal-overlay {
-      position: fixed;
+    /* Event Frame Overlay */
+    .event-frame-overlay {
+      position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.6);
-      display: none;
-      z-index: 10000;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-
-    .capture-confirmation-modal {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) scale(0.9);
-      background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
-      color: white;
-      padding: 30px 40px;
-      border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
-      z-index: 10001;
-      display: none;
-      opacity: 0;
-      transition: all 0.3s ease;
-    }
-
-    .capture-confirmation-modal h2 {
-      margin: 0 0 15px 0;
-      font-size: 2rem;
-      font-weight: bold;
-    }
-
-    .capture-confirmation-modal p {
-      margin: 0 0 20px 0;
-      font-size: 1.1rem;
-      line-height: 1.4;
-    }
-
-    .modal-buttons {
-      display: flex;
-      gap: 15px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .btn-modal {
-      padding: 12px 24px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 0.9rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .btn-modal-primary {
-      background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-      color: white;
-    }
-
-    .btn-modal-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
-    }
-
-    .btn-modal-secondary {
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .btn-modal-secondary:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-2px);
-    }
-
-    .capture-success-icon {
-      font-size: 4rem;
-      margin-bottom: 15px;
-      animation: bounceIn 0.6s ease;
-    }
-
-    @keyframes bounceIn {
-      0% { transform: scale(0.3); opacity: 0; }
-      50% { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(1); }
-    }
-
-    .haiku-container {
-      display: none;
-      margin: 20px 0;
-      padding: 20px;
-      background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
-      border: 2px solid #2196f3;
-      border-radius: 15px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
-      position: relative;
-      overflow: hidden;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 1;
     }
     
-    .haiku-container::before {
-      content: '';
+    .event-frame-top {
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: linear-gradient(45deg, transparent, rgba(33, 150, 243, 0.1), transparent);
-      transform: rotate(45deg);
-      animation: shimmer 3s infinite;
-    }
-    
-    @keyframes shimmer {
-      0% { transform: translateX(-100%) rotate(45deg); }
-      100% { transform: translateX(100%) rotate(45deg); }
-    }
-    
-    .haiku-title {
-      font-size: 1.1rem;
-      font-weight: bold;
-      color: #1976d2;
-      margin-bottom: 15px;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: linear-gradient(180deg, rgba(255,107,53,0.95) 0%, rgba(247,147,30,0.8) 50%, rgba(135,206,235,0.6) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      position: relative;
-      z-index: 1;
+      border-radius: 15px 15px 0 0;
     }
     
-    .haiku-text {
-      font-family: 'Georgia', serif;
-      font-size: 1rem;
-      line-height: 1.6;
-      color: #333;
-      white-space: pre-line;
-      background: rgba(255, 255, 255, 0.8);
-      padding: 15px;
-      border-radius: 8px;
-      margin: 10px 0;
-      position: relative;
-      z-index: 1;
-      font-style: italic;
-    }
-    
-    .haiku-actions {
-      margin-top: 15px;
-      position: relative;
-      z-index: 1;
-    }
-    
-    .btn-haiku {
-      background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
-    }
-    
-    .btn-haiku:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.4);
-    }
-
-    /* Text Edit Panel Styles */
-    .text-edit-panel {
-      display: none;
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: white;
-      border: 2px solid #ff9800;
-      border-radius: 15px;
-      padding: 25px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      z-index: 1000;
-      max-width: 400px;
-      width: 90%;
-    }
-
-    .edit-panel-header {
-      font-size: 1.2rem;
-      font-weight: bold;
-      color: #ff9800;
-      margin-bottom: 20px;
-      text-align: center;
-    }
-
-    .edit-form-group {
-      margin-bottom: 15px;
-    }
-
-    .edit-form-group label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .edit-text-input {
-      width: 100%;
-      padding: 10px;
-      border: 2px solid #ff9800;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-
-    .edit-color-input {
-      width: 100%;
-      height: 40px;
-      border: 2px solid #ff9800;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .edit-font-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .edit-font-btn {
-      padding: 8px 12px;
-      border: 2px solid #ff9800;
-      border-radius: 6px;
-      background: white;
-      color: #ff9800;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-align: center;
-    }
-
-    .edit-font-btn:hover {
-      background: rgba(255, 152, 0, 0.1);
-    }
-
-    .edit-font-btn.selected {
-      background: #ff9800;
-      color: white;
-    }
-
-    .edit-actions {
+    .event-frame-bottom {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background: linear-gradient(0deg, rgba(135,206,235,0.95) 0%, rgba(30,144,255,0.8) 50%, rgba(255,107,53,0.6) 100%);
       display: flex;
-      gap: 10px;
+      align-items: center;
       justify-content: center;
-      margin-top: 20px;
+      border-radius: 0 0 15px 15px;
     }
-
-    .btn-edit {
-      padding: 10px 20px;
+    
+    .event-frame-left {
+      position: absolute;
+      top: 80px;
+      bottom: 60px;
+      left: 0;
+      width: 40px;
+      background: linear-gradient(90deg, rgba(135,206,235,0.8) 0%, rgba(30,144,255,0.4) 100%);
+    }
+    
+    .event-frame-right {
+      position: absolute;
+      top: 80px;
+      bottom: 60px;
+      right: 0;
+      width: 40px;
+      background: linear-gradient(270deg, rgba(135,206,235,0.8) 0%, rgba(30,144,255,0.4) 100%);
+    }
+    
+    .event-title-text {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: white;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.7);
+      font-family: 'Arial Black', Arial, sans-serif;
+      letter-spacing: 2px;
+    }
+    
+    .event-subtitle-text {
+      font-size: 1rem;
+      color: white;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+      font-weight: bold;
+    }
+    
+    /* Decorative wave elements */
+    .wave-decoration {
+      position: absolute;
+      width: 100%;
+      height: 20px;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><path d="M0,10 Q25,0 50,10 T100,10 V20 H0 Z" fill="rgba(135,206,235,0.3)"/></svg>') repeat-x;
+      animation: wave 3s ease-in-out infinite;
+    }
+    
+    .wave-decoration.top {
+      bottom: -10px;
+    }
+    
+    .wave-decoration.bottom {
+      top: -10px;
+      transform: rotate(180deg);
+    }
+    
+    @keyframes wave {
+      0%, 100% { transform: translateX(0) scaleY(1); }
+      50% { transform: translateX(-10px) scaleY(1.1); }
+    }
+    
+    .models-mules-panel {
+      background: linear-gradient(135deg, #87ceeb 0%, #f7931e 100%);
+      border: 3px solid #ff6b35;
+      border-radius: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .models-mules-panel .panel-title {
+      color: white;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+      font-weight: bold;
+    }
+    
+    .mule-overlay-btn {
+      background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+      color: white;
       border: none;
-      border-radius: 6px;
-      font-weight: 600;
+      padding: 15px 25px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
+      transition: all 0.3s ease;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+    
+    .mule-overlay-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    
+    .mule-overlay-btn.active {
+      background: linear-gradient(135deg, #87ceeb 0%, #4682b4 100%);
+      box-shadow: 0 0 15px rgba(135, 206, 235, 0.5);
+    }
+    
+    .tweet-btn {
+      background: linear-gradient(135deg, #1da1f2 0%, #0d8bd9 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 25px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tweet-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(29, 161, 242, 0.3);
+    }
+    
+    .mule-themed-accessories {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+      gap: 10px;
+      margin-top: 15px;
+    }
+    
+    .mule-accessory-btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: 2px solid #ff6b35;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 2rem;
       cursor: pointer;
       transition: all 0.3s ease;
     }
-
-    .btn-edit-apply {
-      background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
-      color: white;
+    
+    .mule-accessory-btn:hover {
+      background: #ff6b35;
+      transform: scale(1.1);
     }
-
-    .btn-edit-cancel {
-      background: linear-gradient(135deg, #f44336 0%, #c62828 100%);
-      color: white;
-    }
-
-    .btn-edit:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    
+    .mule-accessory-btn.selected {
+      background: #f7931e;
+      border-color: #87ceeb;
     }
   </style>
 </head>
 <body>
   <div class="photo-booth">
+    <!-- Event Header -->
+    <div class="event-header">
+      <div class="event-title">🐴 MODELS & MULES 🍹</div>
+      <div class="event-subtitle">Strike a pose with your favorite cocktail mule!</div>
+    </div>
+    
     <h1 class="title">🎭 AI Photo Booth 🤖🎨📸📝</h1>
     
     <div class="status" id="status">Loading camera and face detection...</div>
@@ -776,10 +238,52 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         <video id="video" autoplay playsinline></video>
         <canvas id="overlay-canvas"></canvas>
         <canvas id="drawing-canvas"></canvas>
+        
+        <!-- Models & Mules Event Frame Overlay -->
+        <div class="event-frame-overlay" id="event-frame-overlay">
+          <div class="event-frame-top">
+            <div class="event-title-text">🐴 MODELS & MULES 🍹</div>
+            <div class="wave-decoration top"></div>
+          </div>
+          <div class="event-frame-bottom">
+            <div class="event-subtitle-text">🌊 STRIKE A POSE WITH YOUR MULE! 🌊</div>
+            <div class="wave-decoration bottom"></div>
+          </div>
+          <div class="event-frame-left"></div>
+          <div class="event-frame-right"></div>
+        </div>
       </div>
     </div>
 
     <div class="controls">
+              <!-- Models & Mules Special Panel -->
+      <div class="models-mules-panel">
+        <div class="panel-title">🐴 Models & Mules Event Specials 🍹</div>
+        
+        <div class="event-overlay-section" style="padding: 15px;">
+          <div style="margin-bottom: 15px;">
+            <button class="mule-overlay-btn" onclick="addRandomEventText()">
+              📝 Add Event Text
+            </button>
+          </div>
+          
+          <div class="category-title" style="color: white; margin-bottom: 10px;">🍹 Mule-Themed Accessories</div>
+          <div style="text-align: center; margin-bottom: 10px; color: white; font-size: 0.9rem;">
+            ✨ Event frame is automatically applied to all photos! ✨
+          </div>
+          <div class="mule-themed-accessories">
+            <button class="mule-accessory-btn accessory-btn" data-type="extra" data-item="🐴">🐴</button>
+            <button class="mule-accessory-btn accessory-btn" data-type="extra" data-item="🍹">🍹</button>
+            <button class="mule-accessory-btn accessory-btn" data-type="extra" data-item="🥃">🥃</button>
+            <button class="mule-accessory-btn accessory-btn" data-type="hat" data-item="🤠">🤠</button>
+            <button class="mule-accessory-btn accessory-btn" data-type="extra" data-item="🌊">🌊</button>
+            <button class="mule-accessory-btn accessory-btn" data-type="extra" data-item="⭐">⭐</button>
+            <button class="mule-accessory-btn accessory-btn" data-type="extra" data-item="🎉">🎉</button>
+            <button class="mule-accessory-btn accessory-btn" data-type="extra" data-item="🏝️">🏝️</button>
+          </div>
+        </div>
+      </div>
+
       <div class="accessories-panel">
         <div class="panel-title">🎭 Face Accessories</div>
         
@@ -797,7 +301,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
             <button class="accessory-btn" data-type="hat" data-item="👑">👑</button>
             <button class="accessory-btn" data-type="hat" data-item="🧢">🧢</button>
             <button class="accessory-btn" data-type="hat" data-item="🎓">🎓</button>
-            <button class="accessory-btn" data-type="hat" data-item="🎪">🎪</button>
+            <button class="accessory-btn" data-type="hat" data-item="🤠">🤠</button>
           </div>
         </div>
 
@@ -835,7 +339,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         </div>
       </div>
 
-      <!-- NEW: Text Overlay Panel -->
+      <!-- Text Overlay Panel -->
       <div class="text-panel">
         <div class="panel-title">📝 Text Overlays</div>
         
@@ -854,7 +358,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
             <input 
               type="text" 
               id="text-input" 
-              placeholder="Try: 'write red AWESOME in comic sans on my head' or 'add 🔥 left of face'"
+              placeholder="Try: 'MODELS & MULES' or 'I survived the mule madness!'"
               class="text-input"
             >
             <button id="add-text-btn" class="btn-add-text">📝 Add Text</button>
@@ -914,7 +418,7 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
               <input 
                 type="text" 
                 id="filter-description" 
-                placeholder="Describe the mood... (e.g., 'make this look sad', 'vintage vibes')"
+                placeholder="Describe the mood... (e.g., 'tropical vibes', 'sunset glow')"
                 class="filter-description-input"
               >
               <button id="apply-description-btn" class="btn-ai-filter">🤖 Apply</button>
@@ -941,6 +445,12 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
         <button class="btn btn-secondary" id="download-btn" style="display: none;">💾 Download</button>
         <button class="btn btn-success" id="upload-btn" style="display: none;">☁️ Manual Save</button>
         <button class="btn btn-ai" id="haiku-btn" style="display: none; background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%); color: white;">🤖 Generate AI Haiku</button>
+        
+        <!-- Twitter Share Button - FIXED -->
+        <button class="tweet-btn" id="tweet-btn" onclick="shareToTwitter()">
+          🐦 Tweet My Mule
+        </button>
+        
         <button class="btn btn-success" id="share-btn" style="display: none;">🔗 Share Photo</button>
         <button class="btn btn-secondary" id="gallery-btn">🖼️ View Gallery</button>
       </div>
@@ -1034,12 +544,12 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
       </div>
     </div>
 
-    <!-- NEW: Capture Confirmation Modal -->
+    <!-- Capture Confirmation Modal -->
     <div class="modal-overlay" id="modal-overlay"></div>
     <div class="capture-confirmation-modal" id="capture-confirmation-modal">
       <div class="capture-success-icon">📸✨</div>
-      <h2>Photo Captured!</h2>
-      <p>Your photo has been captured and is being auto-saved to the cloud.</p>
+      <h2>Mule-tastic Photo Captured!</h2>
+      <p>Your Models & Mules photo has been captured and is being auto-saved to the cloud.</p>
       <div class="modal-buttons">
         <button class="btn-modal btn-modal-primary" id="view-last-photo-btn">📷 View Photo</button>
         <button class="btn-modal btn-modal-secondary" id="close-confirmation-btn">✖️ Close</button>
@@ -1048,23 +558,574 @@ export function servePhotoBoothApp(corsHeaders: Record<string, string>): Respons
     
     <div class="share-section" id="share-section">
       <h3>📤 Photo Shared!</h3>
-      <p>Your photo has been saved to the cloud. Share this link:</p>
+      <p>Your Models & Mules photo has been saved to the cloud. Share this link:</p>
       <div class="share-url" id="share-url"></div>
       <button class="btn btn-secondary" onclick="copyShareUrl()">📋 Copy Link</button>
     </div>
 
     <div class="gallery-section">
       <h3>🖼️ Recent Photos</h3>
+      <p style="text-align: center; color: #666; font-size: 0.9rem; margin-bottom: 15px;">
+        Click on any photo to open it and check the URL for sharing! You can also click "Tweet the mule" to tweet it after you took a pic. 🐦
+      </p>
       <div class="gallery-grid" id="gallery-grid"></div>
     </div>
   </div>
 
   <div class="footer">
-    made w/ <span class="heart">♥</span> in sf🌉 w/ <a href="https://workers.cloudflare.com" target="_blank"> cloudflare workers</a>, <a href="https://developers.cloudflare.com/r2/"> cloudflare r2</a>, <a href="https://developers.cloudflare.com/kv/"> cloudflare kv</a>, <a href="https://developers.cloudflare.com/workers-ai/models/"> workers ai🤖</a>, <a href="https://mediapipe.dev" target="_blank"> mediapipe</a>. Code <a href="https://github.com/elizabethsiegle/cf-worker-photobooth-ai">here👩🏻‍💻</a>
+    made w/ <span class="heart">♥</span> for models & mules event 🐴🍹 using <a href="https://workers.cloudflare.com" target="_blank"> cloudflare workers</a>, <a href="https://developers.cloudflare.com/r2/"> cloudflare r2</a>, <a href="https://developers.cloudflare.com/kv/"> cloudflare kv</a>, <a href="https://developers.cloudflare.com/workers-ai/models/"> workers ai🤖</a>, <a href="https://mediapipe.dev" target="_blank"> mediapipe</a>. Code <a href="https://github.com/elizabethsiegle/cf-worker-photobooth-ai">here👩🏻‍💻</a>
   </div>
 
   <script>
     ${getPhotoBoothJS()}
+  </script>
+  
+  <script>
+    // ===== FIXED TWITTER INTEGRATION =====
+    
+    // Main Twitter sharing function - FIXED
+    function shareToTwitter() {
+      const photoContainer = document.getElementById('captured-photo-container');
+      const hasCapturedPhoto = photoContainer && photoContainer.classList.contains('show');
+      
+      if (!hasCapturedPhoto) {
+        // No photo captured - tweet about the event
+        const eventTweetText = "Having a blast at Models & Mules! @openaidevs @digitalocean @cloudflaredev #ModelsAndMules";
+        const twitterUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(eventTweetText);
+        window.open(twitterUrl, '_blank', 'width=550,height=420');
+        
+        // Update status
+        const statusEl = document.getElementById('status');
+        statusEl.textContent = 'Twitter opened! Share about the Models & Mules event! 🐦✨';
+        statusEl.className = 'status ready';
+        return;
+      }
+      
+      // Photo captured - get the photo ID and create shareable link
+      let photoId = window.lastPhotoId || window.selectedPhotoForTweet;
+      
+      if (photoId) {
+        // Tweet with link to photo on your site
+        const photoViewUrl = window.location.origin + '/api/photo/' + photoId;
+        const photoTweetText = "Just struck a pose @ Models & Mules w/ @cloudflaredev @openaidevs @digitalocean! 🐴🍹📸 Check out my photo:";
+        const twitterUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(photoTweetText) + "&url=" + encodeURIComponent(photoViewUrl);
+        
+        window.open(twitterUrl, '_blank', 'width=550,height=420');
+        
+        // Update status
+        const statusEl = document.getElementById('status');
+        statusEl.textContent = 'Twitter opened with your photo link! 🐦✨';
+        statusEl.className = 'status ready';
+      } else {
+        // Fallback: download photo and tweet manually
+        downloadAndTweetInstructions();
+      }
+    }
+    
+    function downloadAndTweetInstructions() {
+      // Trigger download of current photo
+      const downloadBtn = document.getElementById('download-btn');
+      if (downloadBtn) {
+        downloadBtn.click();
+      }
+      
+      // Open Twitter with text
+      const tweetText = "Just took this amazing photo at Models & Mules! 🐴🍹📸 #ModelsAndMules #PhotoBooth #MuleLife";
+      const twitterUrl = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(tweetText);
+      window.open(twitterUrl, '_blank', 'width=550,height=420');
+      
+      // Show instructions
+      setTimeout(() => {
+        alert('📸 Photo downloaded! Now attach it to your tweet on Twitter. 🐦');
+      }, 1000);
+      
+      // Update status
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = 'Download started! Attach the image to your tweet. 📸🐦';
+      statusEl.className = 'status ready';
+    }
+    
+    // Debug function - FIXED
+    function debugTwitter() {
+      console.log('=== TWITTER DEBUG ===');
+      console.log('Selected photo for tweet:', window.selectedPhotoForTweet);
+      console.log('Last photo ID:', window.lastPhotoId);
+      console.log('Captured photo container:', document.getElementById('captured-photo-container'));
+      console.log('Tweet button element:', document.getElementById('tweet-btn'));
+      
+      // Test the function
+      shareToTwitter();
+    }
+    
+    // ===== MODELS & MULES EVENT FUNCTIONS =====
+    
+    let eventOverlayActive = false;
+    let photoBoothInstance = null;
+    
+    function toggleEventOverlay() {
+      const btn = document.getElementById('event-overlay-btn');
+      const frameOverlay = document.getElementById('event-frame-overlay');
+      
+      console.log('Toggle button clicked, eventOverlayActive:', eventOverlayActive);
+      console.log('Frame overlay element:', frameOverlay);
+      
+      if (!eventOverlayActive) {
+        // Show the frame overlay
+        eventOverlayActive = true;
+        btn.classList.add('active');
+        btn.textContent = '🐴 Remove Event Frame';
+        
+        frameOverlay.classList.add('active');
+        
+        console.log('Frame overlay should now be visible');
+        
+        // Update status
+        const statusEl = document.getElementById('status');
+        statusEl.textContent = 'Models & Mules frame overlay added! 🐴🍹 Perfect for photos!';
+        statusEl.className = 'status ready';
+        
+      } else {
+        // Hide the frame overlay
+        eventOverlayActive = false;
+        btn.classList.remove('active');
+        btn.textContent = '🐴 Add Models & Mules Frame';
+        
+        frameOverlay.classList.remove('active');
+        
+        console.log('Frame overlay should now be hidden');
+        
+        const statusEl = document.getElementById('status');
+        statusEl.textContent = 'Event frame overlay removed! 🗑️';
+        statusEl.className = 'status ready';
+      }
+    }
+    
+    // Function to draw the Models & Mules frame directly on canvas
+    function drawEventFrameOnCanvas(canvas, ctx) {
+      const width = canvas.width;
+      const height = canvas.height;
+      
+      // Save canvas state
+      ctx.save();
+      
+      // Draw top bar background
+      const topHeight = 80;
+      const topGradient = ctx.createLinearGradient(0, 0, 0, topHeight);
+      topGradient.addColorStop(0, 'rgba(255,107,53,0.95)');
+      topGradient.addColorStop(0.5, 'rgba(247,147,30,0.8)');
+      topGradient.addColorStop(1, 'rgba(135,206,235,0.6)');
+      
+      ctx.fillStyle = topGradient;
+      ctx.fillRect(0, 0, width, topHeight);
+      
+      // Draw bottom bar background
+      const bottomHeight = 60;
+      const bottomGradient = ctx.createLinearGradient(0, height - bottomHeight, 0, height);
+      bottomGradient.addColorStop(0, 'rgba(135,206,235,0.95)');
+      bottomGradient.addColorStop(0.5, 'rgba(30,144,255,0.8)');
+      bottomGradient.addColorStop(1, 'rgba(255,107,53,0.6)');
+      
+      ctx.fillStyle = bottomGradient;
+      ctx.fillRect(0, height - bottomHeight, width, bottomHeight);
+      
+      // Draw side bars
+      const sideWidth = 40;
+      const leftGradient = ctx.createLinearGradient(0, 0, sideWidth, 0);
+      leftGradient.addColorStop(0, 'rgba(135,206,235,0.8)');
+      leftGradient.addColorStop(1, 'rgba(30,144,255,0.4)');
+      
+      ctx.fillStyle = leftGradient;
+      ctx.fillRect(0, topHeight, sideWidth, height - topHeight - bottomHeight);
+      
+      const rightGradient = ctx.createLinearGradient(width - sideWidth, 0, width, 0);
+      rightGradient.addColorStop(0, 'rgba(135,206,235,0.8)');
+      rightGradient.addColorStop(1, 'rgba(30,144,255,0.4)');
+      
+      ctx.fillStyle = rightGradient;
+      ctx.fillRect(width - sideWidth, topHeight, sideWidth, height - topHeight - bottomHeight);
+      
+      // Draw top text
+      ctx.fillStyle = 'white';
+      ctx.font = 'bold 32px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'rgba(0,0,0,0.7)';
+      ctx.lineWidth = 3;
+      
+      const topText = '🐴 MODELS & MULES 🍹';
+      ctx.strokeText(topText, width / 2, topHeight / 2);
+      ctx.fillText(topText, width / 2, topHeight / 2);
+      
+      // Draw bottom text
+      ctx.font = 'bold 20px Arial';
+      const bottomText = '🌊 STRIKE A POSE WITH YOUR MULE! 🌊';
+      ctx.strokeText(bottomText, width / 2, height - bottomHeight / 2);
+      ctx.fillText(bottomText, width / 2, height - bottomHeight / 2);
+      
+      // Restore canvas state
+      ctx.restore();
+    }
+    
+    // Override the photo capture to include frame BEFORE upload
+    function enhancePhotoCaptureWithFrame() {
+      // Wait for photo booth to be ready and find the instance
+      setTimeout(() => {
+        // Try to find the CloudPhotoBooth instance
+        const findPhotoBoothInstance = () => {
+          // Look for signs the photo booth is ready
+          const video = document.getElementById('video');
+          const overlayCanvas = document.getElementById('overlay-canvas');
+          const capturedCanvas = document.getElementById('captured-photo');
+          
+          if (video && overlayCanvas && capturedCanvas && video.srcObject) {
+            // Try to access the instance through various means
+            if (window.globalPhotoBoothInstance) {
+              return window.globalPhotoBoothInstance;
+            }
+            
+            // Create a wrapper that can override capture
+            return {
+              video: video,
+              overlayCanvas: overlayCanvas,
+              capturedCanvas: capturedCanvas,
+              drawingCanvas: document.getElementById('drawing-canvas')
+            };
+          }
+          return null;
+        };
+        
+        const checkAndOverride = () => {
+          const instance = findPhotoBoothInstance();
+          if (instance) {
+            console.log('Found photo booth elements, setting up frame capture override');
+            
+            // Override the capture button to include frame in the capture process
+            const captureBtn = document.getElementById('capture-btn');
+            if (captureBtn) {
+              // Remove existing event listeners by cloning the button
+              const newCaptureBtn = captureBtn.cloneNode(true);
+              captureBtn.parentNode.replaceChild(newCaptureBtn, captureBtn);
+              
+              // Add our custom capture handler
+              newCaptureBtn.addEventListener('click', () => {
+                customCaptureWithFrame(instance);
+              });
+              
+              console.log('Capture button overridden with frame-enabled capture');
+            }
+          } else {
+            // Try again in a bit
+            setTimeout(checkAndOverride, 1000);
+          }
+        };
+        
+        checkAndOverride();
+      }, 2000);
+    }
+    
+    // Custom capture function that includes the frame
+    async function customCaptureWithFrame(photoBoothElements) {
+      console.log('Custom capture with frame starting...');
+      
+      const video = photoBoothElements.video;
+      const overlayCanvas = photoBoothElements.overlayCanvas;
+      const drawingCanvas = photoBoothElements.drawingCanvas;
+      const capturedCanvas = photoBoothElements.capturedCanvas;
+      
+      if (!video || !capturedCanvas) {
+        console.error('Missing required elements for capture');
+        return;
+      }
+      
+      // Update status
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = '📸 Capturing photo with Models & Mules frame...';
+      statusEl.className = 'status loading';
+      
+      // Set canvas dimensions
+      capturedCanvas.width = video.videoWidth;
+      capturedCanvas.height = video.videoHeight;
+      
+      const ctx = capturedCanvas.getContext('2d');
+      
+      // Step 1: Draw the video
+      ctx.drawImage(video, 0, 0);
+      
+      // Step 2: Draw overlays (accessories, text, etc.)
+      if (overlayCanvas) {
+        ctx.drawImage(overlayCanvas, 0, 0);
+      }
+      
+      // Step 3: Draw any drawings
+      if (drawingCanvas) {
+        ctx.drawImage(drawingCanvas, 0, 0);
+      }
+      
+      // Step 4: Draw the Models & Mules frame ON TOP
+      drawEventFrameOnCanvas(capturedCanvas, ctx);
+      
+      // Step 5: Show the captured photo
+      const container = document.getElementById('captured-photo-container');
+      if (container) {
+        container.classList.add('show');
+      }
+      
+      // Step 6: Show action buttons
+      document.getElementById('download-btn').style.display = 'block';
+      document.getElementById('upload-btn').style.display = 'block';
+      document.getElementById('haiku-btn').style.display = 'block';
+      
+      // Step 7: Upload the enhanced photo
+      try {
+        const blob = await new Promise(resolve => 
+          capturedCanvas.toBlob(resolve, 'image/png', 0.9)
+        );
+        
+        if (blob) {
+          const formData = new FormData();
+          formData.append('photo', blob, 'models-mules-photo.png');
+          formData.append('accessories', JSON.stringify({}));
+          formData.append('filter', 'none');
+          formData.append('hasDrawing', 'false');
+          
+          const response = await fetch('/api/upload', {
+            method: 'POST',
+            body: formData
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            window.lastPhotoId = result.photoId;
+            
+            statusEl.textContent = '✅ Photo with Models & Mules frame saved! Filename: ' + result.filename;
+            statusEl.className = 'status ready';
+            
+            // Reload gallery to show new photo
+            setTimeout(() => {
+              // Manually reload gallery and set up click handlers
+              fetch('/api/gallery?limit=12')
+                .then(response => response.json())
+                .then(data => {
+                  const gallery = document.getElementById('gallery-grid');
+                  if (data.photos && data.photos.length > 0) {
+                    gallery.innerHTML = data.photos.map(photo => 
+                      '<div class="gallery-item" data-photo-id="' + photo.id + '">' +
+                        '<img src="/api/photo/' + photo.id + '" alt="Photo" loading="lazy">' +
+                      '</div>'
+                    ).join('');
+                    
+                    // Set up click handlers for gallery items
+                    updateGalleryClickHandlers();
+                    
+                    console.log('Gallery reloaded with', data.photos.length, 'photos');
+                  }
+                })
+                .catch(error => {
+                  console.error('Gallery reload error:', error);
+                });
+            }, 1500);
+            
+            console.log('Photo with frame uploaded successfully:', result.photoId);
+          } else {
+            throw new Error('Upload failed');
+          }
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        statusEl.textContent = 'Upload failed, but photo captured with frame! Use download button.';
+        statusEl.className = 'status error';
+      }
+    }
+
+    function addRandomEventText() {
+      const eventPhrases = [
+        'I survived the Mule Madness!',
+        'Models & Mules 2024 🐴',
+        'Mule Life',
+        'Cheers to Mules! 🍹',
+        'Party Animal 🐴',
+        'Mule-tastic Night!',
+        'Living my best mule life 🐴',
+        'Cocktail hour champion 🍹',
+        'Models & Mules forever!'
+      ];
+      
+      const randomPhrase = eventPhrases[Math.floor(Math.random() * eventPhrases.length)];
+      
+      const textInput = document.getElementById('text-input');
+      const originalValue = textInput.value;
+      
+      textInput.value = randomPhrase;
+      
+      const addTextBtn = document.getElementById('add-text-btn');
+      addTextBtn.click();
+      
+      // Restore original input value
+      setTimeout(() => {
+        textInput.value = originalValue;
+      }, 100);
+      
+      setTimeout(() => {
+        const statusEl = document.getElementById('status');
+        statusEl.textContent = 'Event text "' + randomPhrase + '" added! 🎉 Drag to reposition or double-click to edit.';
+        statusEl.className = 'status ready';
+      }, 1000);
+    }
+    
+    // Function to handle gallery photo clicks
+    function handleGalleryPhotoClick(photoId) {
+      console.log('Gallery photo clicked:', photoId);
+      
+      // Open the photo in new tab (keep existing behavior)
+      window.open('/api/photo/' + photoId, '_blank');
+      
+      // Store the photo ID for tweeting
+      window.selectedPhotoForTweet = photoId;
+      console.log('Stored photo ID for tweeting:', photoId);
+      
+      // Show the tweet button
+      const tweetBtn = document.getElementById('tweet-btn');
+      if (tweetBtn) {
+        tweetBtn.style.display = 'inline-flex';
+        console.log('Tweet button should now be visible');
+      } else {
+        console.error('Tweet button not found!');
+      }
+      
+      // Update status
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = 'Photo selected! Click "🐦 Tweet My Mule" to share this photo. 📸✨';
+      statusEl.className = 'status ready';
+      
+      console.log('Gallery photo click handled successfully');
+    }
+    
+    function updateGalleryClickHandlers() {
+  console.log('=== SETTING UP GALLERY HANDLERS ===');
+  
+  const galleryGrid = document.getElementById('gallery-grid');
+  if (!galleryGrid) {
+    console.error('Gallery grid not found!');
+    return;
+  }
+  
+  // CRITICAL: Remove ALL existing event listeners by cloning
+  const newGalleryGrid = galleryGrid.cloneNode(true);
+  galleryGrid.parentNode.replaceChild(newGalleryGrid, galleryGrid);
+  
+  // SINGLE EVENT LISTENER - NO DUPLICATES
+  newGalleryGrid.addEventListener('click', function(e) {
+    console.log('SINGLE GALLERY CLICK:', e.target.tagName, e.target.className);
+    
+    // Photo/image clicked - ONLY OPEN ONCE
+    const galleryItem = e.target.closest('.gallery-item');
+    if (galleryItem) {
+      e.stopPropagation();
+      e.preventDefault();
+      
+      const photoId = galleryItem.dataset.photoId;
+      console.log('PHOTO CLICKED - OPENING ONCE:', photoId);
+      if (photoId) {
+        // OPEN ONLY ONCE
+        window.open('/api/photo/' + photoId, '_blank');
+      }
+    }
+  });
+  
+  console.log('=== SINGLE GALLERY HANDLER SET ===');
+}
+    
+    // Monitor for gallery updates
+    function observeGalleryChanges() {
+      const galleryGrid = document.getElementById('gallery-grid');
+      if (!galleryGrid) return;
+      
+      const observer = new MutationObserver((mutations) => {
+        mutations.forEach((mutation) => {
+          if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+            // Gallery was updated, update click handlers
+            setTimeout(updateGalleryClickHandlers, 100);
+          }
+        });
+      });
+      
+      observer.observe(galleryGrid, { childList: true });
+      
+      // Also update handlers for any existing gallery items
+      setTimeout(updateGalleryClickHandlers, 1000);
+    }
+    
+    // Add missing global functions for onclick handlers
+    function copyHaiku() {
+      const haikuText = document.getElementById('haiku-text').textContent;
+      navigator.clipboard.writeText(haikuText).then(() => {
+        alert('Haiku copied to clipboard! 🎌');
+      });
+    }
+    
+    function copyShareUrl() {
+      const shareUrl = document.getElementById('share-url').textContent;
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert('Share URL copied to clipboard! 📋');
+      });
+    }
+    
+    // Initialize when page loads
+    window.addEventListener('load', () => {
+      // Initialize gallery click monitoring
+      observeGalleryChanges();
+      
+      // Enhance photo capture to include frame
+      enhancePhotoCaptureWithFrame();
+      
+      // Store photo ID globally when photos are captured
+      window.lastPhotoId = null;
+      window.selectedPhotoForTweet = null; // For gallery-selected photos
+      
+      // Monitor for gallery button clicks to load gallery
+      const galleryBtn = document.getElementById('gallery-btn');
+      if (galleryBtn) {
+        galleryBtn.addEventListener('click', () => {
+          console.log('Gallery button clicked - will set up handlers after load');
+          // Give the gallery time to load, then update handlers
+          setTimeout(() => {
+            console.log('Setting up gallery click handlers after gallery load');
+            updateGalleryClickHandlers();
+          }, 2000);
+          
+          // Also try again after a longer delay
+          setTimeout(() => {
+            console.log('Second attempt at setting up gallery click handlers');
+            updateGalleryClickHandlers();
+          }, 4000);
+        });
+      }
+      
+      // Also set up initial handlers for any existing gallery
+      setTimeout(() => {
+        console.log('Setting up initial gallery click handlers');
+        updateGalleryClickHandlers();
+      }, 5000);
+      
+      // Also monitor for upload responses to capture the photo ID
+      const originalFetch = window.fetch;
+      window.fetch = function(...args) {
+        return originalFetch.apply(this, args).then(response => {
+          // Check if this is an upload response
+          if (args[0] === '/api/upload' && response.ok) {
+            response.clone().json().then(data => {
+              if (data.photoId) {
+                window.lastPhotoId = data.photoId;
+                console.log('Stored photo ID for Twitter sharing:', data.photoId);
+              }
+            }).catch(err => {
+              console.log('Could not parse upload response for photo ID');
+            });
+          }
+          return response;
+        });
+      };
+    });
   </script>
 </body>
 </html>`;

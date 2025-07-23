@@ -1,8 +1,8 @@
 // File: handlers/aiHandler.ts
-// Enhanced Workers AI integration with text overlay support for creative filename generation and haiku creation
+// Workers AI integration with text overlay support for creative filename generation and haiku creation
 
 import { createErrorResponse, createSuccessResponse } from '../utils/helpers';
-import { ERROR_MESSAGES, KV_NAMESPACE } from '../utils/constants';
+import { KV_NAMESPACE } from '../utils/constants';
 
 export interface Env {
   AI: Ai;
@@ -43,7 +43,7 @@ export async function generateCreativeFilename(
       .filter(Boolean)
       .join(', ') || 'no accessories';
     
-    // NEW: Include text overlay information
+    // Include text overlay information
     const textInfo = metadata.textOverlays && metadata.textOverlays.length > 0
       ? `Text overlays: ${metadata.textOverlays.map(t => t.content).join(', ')}`
       : metadata.textCount && metadata.textCount > 0
@@ -58,12 +58,12 @@ export async function generateCreativeFilename(
       {
         role: "user",
         content: `Generate a creative filename for a photo with these elements:
-- Accessories: ${accessoryList}
-- Filter: ${metadata.filter}
-- Has drawing: ${metadata.hasDrawing ? 'yes' : 'no'}
-- Text content: ${textInfo}
+        - Accessories: ${accessoryList}
+        - Filter: ${metadata.filter}
+        - Has drawing: ${metadata.hasDrawing ? 'yes' : 'no'}
+        - Text content: ${textInfo}
 
-Make it fun and memorable, considering all the creative elements!`
+        Make it fun and memorable, considering all the creative elements!`
       }
     ];
 
@@ -103,7 +103,7 @@ export async function generatePhotoHaiku(
     
     const filterDescription = getFilterDescription(metadata.filter);
     
-    // NEW: Enhanced text overlay description for haiku context
+    // Enhanced text overlay description for haiku context
     let textDescription = '';
     if (metadata.textOverlays && metadata.textOverlays.length > 0) {
       const textContents = metadata.textOverlays.map(t => t.content).join(', ');
@@ -122,12 +122,12 @@ export async function generatePhotoHaiku(
       {
         role: "user",
         content: `Create a haiku about a photo booth picture with these elements:
-- Accessories worn: ${accessoryList}
-- Visual filter: ${filterDescription}
-- Has custom drawing: ${metadata.hasDrawing ? 'yes' : 'no'}
-- Text elements: ${textDescription}
+        - Accessories worn: ${accessoryList}
+        - Visual filter: ${filterDescription}
+        - Has custom drawing: ${metadata.hasDrawing ? 'yes' : 'no'}
+        - Text elements: ${textDescription}
 
-Capture the playful, creative spirit of a photo booth moment, including any meaningful text or messages!`
+        Capture the playful, creative spirit of a photo booth moment, including any meaningful text or messages!`
       }
     ];
 
@@ -241,17 +241,17 @@ export async function interpretFilterDescription(
         role: "user",
         content: `What filter should be applied for this description: "${description}"
 
-Examples:
-- "make this look sad" → grayscale
-- "vintage vibes" → vintage
-- "warm and cozy" → warm
-- "dramatic and moody" → dramatic
-- "soft and ethereal" → dreamy
-- "cool and calm" → cool
-- "old timey" → sepia
-- "normal" → none
+        Examples:
+        - "make this look sad" → grayscale
+        - "vintage vibes" → vintage
+        - "warm and cozy" → warm
+        - "dramatic and moody" → dramatic
+        - "soft and ethereal" → dreamy
+        - "cool and calm" → cool
+        - "old timey" → sepia
+        - "normal" → none
 
-Respond with only the filter name.`
+        Respond with only the filter name.`
       }
     ];
 
@@ -411,7 +411,7 @@ export async function parseTextCommand(
   }
 }
 
-export async function handleTextCommandParsing(
+export async function handleTextCommandParsing( // runs upon text box input in app
   request: Request,
   env: Env,
   corsHeaders: Record<string, string>

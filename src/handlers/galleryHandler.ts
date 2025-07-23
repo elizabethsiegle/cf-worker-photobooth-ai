@@ -2,7 +2,7 @@
 // Updated gallery handler to display all photos without limit
 
 import { createErrorResponse, createSuccessResponse } from '../utils/helpers';
-import { ERROR_MESSAGES, BUCKET_NAME } from '../utils/constants';
+import { BUCKET_NAME } from '../utils/constants';
 
 export async function handleGallery(
   request: Request,
